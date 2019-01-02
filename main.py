@@ -28,4 +28,7 @@ if __name__ == '__main__':
                 bot.load_extension(extension)
         except Exception as error:
             print('{} cannot be loaded because {}'.format(extension, error))
-    bot.run('NTExNzg2OTE4NzgzMDkwNjg4.DswJvw.pB_bNWK7LRAhVP9W7xxM-StJEkk') 
+    with open('key.json', 'r') as f:
+        keys = json.load(f)
+    thing = keys['key']
+    bot.run(thing)
