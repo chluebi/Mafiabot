@@ -31,17 +31,11 @@ class mafia:
     healVictim = None
     pastHeal = None
 
-    mafia = None #user
-    doctor = None #user
-    detective = None #user
-    villagers = [] #id
-    werewolf = [] #id
-    politician = None #id
 
     @commands.command(pass_context = True)
     async def stopGame(self, ctx):
       server = ctx.message.server
-      if server.id in self.serverStatus:
+      if not server.id in self.serverStatus:
         await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("You don't even have a game going on."))
       elif ctx.message.author.server_permissions.administrator == True and self.serverStatus[server.id]["gameOn"] == True:
         self.commandStop = True
@@ -64,114 +58,130 @@ class mafia:
 
         
     @commands.command(pass_context = True)
-    async def joinP(self, ctx):
+    async def join(self, ctx):
         server = ctx.message.server
-        self.checkServer(server)
-        
-        if self.serverStatus[server.id]["gameOn"] == True:
-            await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("You cannot currently join right now because there is a game going on."))
-        elif self.serverStatus[server.id]["ready"] == True:
-          await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("The is a game currently being set up!"))
+        if server is None:
+            await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("This ain't a discord server."))
+            
         else:
-            if not ctx.message.author in self.mafiaPlayers[server.id].keys():
-                self.mafiaPlayers[server.id][ctx.message.author] = "" # add author to dictionary
+            self.checkServer(server)
+            
+            if self.serverStatus[server.id]["gameOn"] == True:
+                await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("You cannot currently join right now because there is a game going on."))
+            elif self.serverStatus[server.id]["ready"] == True:
+                await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("The is a game currently being set up!"))
 
-                await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("You have been added to the list."))
-                embed = discord.Embed(title = "Mafia Party:".format(), colour = discord.Colour.purple())
-                embed.set_thumbnail(url= "http://www.lol-wallpapers.com/wp-content/uploads/2018/08/Mafia-Braum-Miss-Fortune-by-wandakun-HD-Wallpaper-Background-Fan-Art-Artwork-League-of-Legends-lol.jpg")
-                for player in self.mafiaPlayers[server.id].keys():
-                    embed.add_field(name = "Player:", value = "{}".format(player.name), inline = True)
-                await self.bot.send_message(ctx.message.channel, embed = embed)
             else:
-                await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("You are already in the party."))
+                if not ctx.message.author in self.mafiaPlayers[server.id].keys():
+                    self.mafiaPlayers[server.id][ctx.message.author] = "" # add author to dictionary
+
+                    await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("You have been added to the list."))
+                    embed = discord.Embed(title = "Mafia Party:".format(), colour = discord.Colour.purple())
+                    embed.set_thumbnail(url= "http://www.lol-wallpapers.com/wp-content/uploads/2018/08/Mafia-Braum-Miss-Fortune-by-wandakun-HD-Wallpaper-Background-Fan-Art-Artwork-League-of-Legends-lol.jpg")
+                    for player in self.mafiaPlayers[server.id].keys():
+                        embed.add_field(name = "Player:", value = "{}".format(player.name), inline = True)
+                    await self.bot.send_message(ctx.message.channel, embed = embed)
+                else:
+                    await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("You are already in the party."))
 
     @commands.command(pass_context = True)
-    async def leaveP(self, ctx):
+    async def leave(self, ctx):
         server = ctx.message.server
-        self.checkServer(server)
-        if self.serverStatus[server.id]["gameOn"] == True or self.serverStatus[server.id]["ready"] == True:
-            await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("You cannot currently leave right now because there is a game going on."))
+        if server is None:
+            await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("This ain't a discord server."))
         else:
-            if not ctx.message.author in self.mafiaPlayers[server.id].keys():
-                await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("You are not in the party."))
+            self.checkServer(server)
+            if self.serverStatus[server.id]["gameOn"] == True or self.serverStatus[server.id]["ready"] == True:
+                await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("You cannot currently leave right now because there is a game going on."))
             else:
-                self.mafiaPlayers[server.id].pop(ctx.message.author, None)
-                await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("You have left the party."))
+                if not ctx.message.author in self.mafiaPlayers[server.id].keys():
+                    await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("You are not in the party."))
+                else:
+                    self.mafiaPlayers[server.id].pop(ctx.message.author, None)
+                    await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("You have left the party."))
 
     @commands.command(pass_context = True)
     async def party(self, ctx):
         server = ctx.message.server
-        self.checkServer(server)
-        embed = discord.Embed(title = "Mafia Party:".format(), colour = discord.Colour.purple())
-        embed.set_thumbnail(url= "http://www.lol-wallpapers.com/wp-content/uploads/2018/08/Mafia-Braum-Miss-Fortune-by-wandakun-HD-Wallpaper-Background-Fan-Art-Artwork-League-of-Legends-lol.jpg")
-        for player in self.mafiaPlayers[server.id].keys():
-            embed.add_field(name = "Player:", value = "{}".format(player.name), inline = True)
-        await self.bot.send_message(ctx.message.channel, embed = embed)
+        if server is None:
+            await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("This ain't a discord server."))
+        else:
+            self.checkServer(server)
+            embed = discord.Embed(title = "Mafia Party:".format(), colour = discord.Colour.purple())
+            embed.set_thumbnail(url= "http://www.lol-wallpapers.com/wp-content/uploads/2018/08/Mafia-Braum-Miss-Fortune-by-wandakun-HD-Wallpaper-Background-Fan-Art-Artwork-League-of-Legends-lol.jpg")
+            for player in self.mafiaPlayers[server.id].keys():
+                embed.add_field(name = "Player:", value = "{}".format(player.name), inline = True)
+            await self.bot.send_message(ctx.message.channel, embed = embed)
 
     @commands.command(pass_context = True)
     async def setGame(self, ctx):
         server = ctx.message.server
-        if self.serverStatus[server.id]["ready"] == True:
-          embed = discord.Embed(title = "You have already set up. Type /start to begin.")
-          await self.bot.send_message(ctx.message.channel, embed = embed)
-        
-        elif self.serverStatus[server.id]["gameOn"] == True:
-            await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("There is already a game playing."))
-
-        elif len(self.mafiaPlayers[server.id].keys()) < 5:
-            embed = discord.Embed(title = "Sorry. You need at least 5 people to play the game. You only have {} players.".format(len(self.mafiaPlayers[server.id].keys())))
-            await self.bot.send_message(ctx.message.channel, embed = embed)
-        elif len(self.mafiaPlayers[server.id].keys())> 10:
-            await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("Sorry. The max number of people is 10 people."))
-
+        if server is None:
+            await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("This ain't a discord server."))
         else:
-            self.serverStatus[server.id]["ready"] = True
+            self.checkServer(server)
+            if self.serverStatus[server.id]["ready"] == True:
+                embed = discord.Embed(title = "You have already set up. Type /start to begin.")
+                await self.bot.send_message(ctx.message.channel, embed = embed)
+            
+            elif self.serverStatus[server.id]["gameOn"] == True:
+                await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("There is already a game playing."))
 
-            prepObj = prep.prepare(self.bot, self.mafiaPlayers[server.id])
-            prepObj.assignRoles()
-            # Finished settings roles
+            elif len(self.mafiaPlayers[server.id].keys()) < 5:
+                embed = discord.Embed(title = "Sorry. You need at least 5 people to play the game. You only have {} players.".format(len(self.mafiaPlayers[server.id].keys())))
+                await self.bot.send_message(ctx.message.channel, embed = embed)
+            elif len(self.mafiaPlayers[server.id].keys())> 10:
+                await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("Sorry. The max number of people is 10 people."))
 
-            # Inform player of roles
-            for player, data in self.mafiaPlayers[server.id].items():
-                if(data.roleName == 'mafia'):
-                    embed = discord.Embed(title = "You are the Mafia. Your job is to kill everyone. Pretty simple.", colour = discord.Colour.red())
+            else:
+                self.serverStatus[server.id]["ready"] = True
 
-                    embed.set_thumbnail(url = "https://images2.minutemediacdn.com/image/upload/c_scale,w_912,h_516,c_fill,g_auto/shape/cover/sport/5b73276e8f1752549a000001.jpeg")
-                    await self.bot.send_message(player, embed = embed)
-                elif(data.roleName == 'doctor'):
-                    embed = discord.Embed(title = "You are the Doctor. Your job is to save people. But you can't save the same person twice in a row.", colour = discord.Colour.blue())
-                    embed.set_thumbnail(url = "https://res.cloudinary.com/teepublic/image/private/s--NyIx9Nop--/t_Preview/b_rgb:c62b29,c_limit,f_jpg,h_630,q_90,w_630/v1469022975/production/designs/592798_1.jpg")
-                    await self.bot.send_message(player, embed = embed)
-                elif(data.roleName == 'detective'):
-                    embed = discord.Embed(title = "You are the Detective. Your job is to find the Mafia.", colour = discord.Colour.orange())
-                    embed.set_thumbnail(url = "https://78.media.tumblr.com/9681fb542682771069c3864dcbae7ef8/tumblr_o1mh5vUWe91r0sasuo1_400.gif")
-                    await self.bot.send_message(player, embed = embed)
-                elif(data.roleName == 'politician'):
-                    embed = discord.Embed(title = "You are the Politician. You're just another villager, but you can accept bribe from Mafia to be on his side. Sounds fun. And realistic.", colour = discord.Colour.green())
-                    await self.bot.send_message(player, embed = embed)
-                elif (data.roleName == 'jester'):
-                    embed = discord.Embed(title = "You are the Jester. Your win condition is to get the town to lynch you.", colour = discord.Colour.teal())
-                    embed.set_thumbnail(url = "https://runes.lol/image/generated/championtiles/Shaco.jpg")
-                    await self.bot.send_message(player, embed = embed)
-                else:
-                    embed = discord.Embed(title = "You are just a normal innocent villager who might get accused for crimes you didn't commit ¯\_(ツ)_/¯ ", colour = discord.Colour.dark_gold())
-                    embed.set_thumbnail(url = "https://www.ssbwiki.com/images/thumb/a/ac/Villager_SSBU.png/250px-Villager_SSBU.png")
-                    await self.bot.send_message(player, embed = embed)
+                prepObj = prep.prepare(self.bot, self.mafiaPlayers[server.id])
+                prepObj.assignRoles()
+                # Finished settings roles
 
-            everyone_perms = discord.PermissionOverwrite(send_messages=False)
-            my_perms = discord.PermissionOverwrite(send_messages=True)
+                # Inform player of roles
+                for player, data in self.mafiaPlayers[server.id].items():
+                    if(data.roleName == 'mafia'):
+                        embed = discord.Embed(title = "You are the Mafia. Your job is to kill everyone. Pretty simple.", colour = discord.Colour.red())
 
-            everyone = discord.ChannelPermissions(target=server.default_role, overwrite=everyone_perms)
-            mine = discord.ChannelPermissions(target=server.me, overwrite=my_perms)
-            await self.bot.create_channel(server, "mafia", everyone, mine)
-            self.serverStatus[server.id]["ready"] = True
-            await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("Everything's ready! Type /start to start the game!"))
+                        embed.set_thumbnail(url = "https://images2.minutemediacdn.com/image/upload/c_scale,w_912,h_516,c_fill,g_auto/shape/cover/sport/5b73276e8f1752549a000001.jpeg")
+                        await self.bot.send_message(player, embed = embed)
+                    elif(data.roleName == 'doctor'):
+                        embed = discord.Embed(title = "You are the Doctor. Your job is to save people. But you can't save the same person twice in a row.", colour = discord.Colour.blue())
+                        embed.set_thumbnail(url = "https://res.cloudinary.com/teepublic/image/private/s--NyIx9Nop--/t_Preview/b_rgb:c62b29,c_limit,f_jpg,h_630,q_90,w_630/v1469022975/production/designs/592798_1.jpg")
+                        await self.bot.send_message(player, embed = embed)
+                    elif(data.roleName == 'detective'):
+                        embed = discord.Embed(title = "You are the Detective. Your job is to find the Mafia.", colour = discord.Colour.orange())
+                        embed.set_thumbnail(url = "https://78.media.tumblr.com/9681fb542682771069c3864dcbae7ef8/tumblr_o1mh5vUWe91r0sasuo1_400.gif")
+                        await self.bot.send_message(player, embed = embed)
+                    elif(data.roleName == 'politician'):
+                        embed = discord.Embed(title = "You are the Politician. You're just another villager, but you can accept bribe from Mafia to be on his side. Sounds fun. And realistic.", colour = discord.Colour.green())
+                        await self.bot.send_message(player, embed = embed)
+                    elif (data.roleName == 'jester'):
+                        embed = discord.Embed(title = "You are the Jester. Your win condition is to get the town to lynch you.", colour = discord.Colour.teal())
+                        embed.set_thumbnail(url = "https://runes.lol/image/generated/championtiles/Shaco.jpg")
+                        await self.bot.send_message(player, embed = embed)
+                    else:
+                        embed = discord.Embed(title = "You are just a normal innocent villager who might get accused for crimes you didn't commit ¯\_(ツ)_/¯ ", colour = discord.Colour.dark_gold())
+                        embed.set_thumbnail(url = "https://www.ssbwiki.com/images/thumb/a/ac/Villager_SSBU.png/250px-Villager_SSBU.png")
+                        await self.bot.send_message(player, embed = embed)
+
+                everyone_perms = discord.PermissionOverwrite(send_messages=False)
+                my_perms = discord.PermissionOverwrite(send_messages=True)
+
+                everyone = discord.ChannelPermissions(target=server.default_role, overwrite=everyone_perms)
+                mine = discord.ChannelPermissions(target=server.me, overwrite=my_perms)
+                await self.bot.create_channel(server, "mafia", everyone, mine)
+                self.serverStatus[server.id]["ready"] = True
+                await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("Everything's ready! Type /start to start the game!"))
 
 
     
     @commands.command(pass_context = True)
     async def start(self, ctx):
         server = ctx.message.server
+        self.checkServer(server)
         currentP = self.mafiaPlayers[server.id]
         if self.serverStatus[server.id]["ready"] == False:
             await self.bot.send_message(ctx.message.channel, embed = self.makeEmbed("You didn't set up yet. Type /setGame first."))
@@ -434,11 +444,7 @@ class mafia:
                     for player in currentP.keys():
                       await self.bot.server_voice_state(player, mute = False)
                     embed = discord.Embed(title = "The mafia(s) win!", colour = discord.Colour.red())
-                    self.displayAllR(embed, currentP)
-                    await self.bot.send_message(channel, embed = embed)
-                    await self.bot.send_message(channel, "Thank you all for playing! Deleting this channel in 10 seconds.")
-                    await asyncio.sleep(10)
-                    await self.bot.delete_channel(channel)
+                    
                     break
 
 
@@ -446,11 +452,7 @@ class mafia:
                     for player in currentP.keys():
                       await self.bot.server_voice_state(player, mute = False)
                     embed = discord.Embed(title = "The villagers win", colour = discord.Colour.green())
-                    self.displayAllR(embed, currentP)
-                    await self.bot.send_message(channel, embed = embed)
-                    await self.bot.send_message(channel, "Thank you all for playing! Deleting this channel in 10 seconds.")
-                    await asyncio.sleep(10)
-                    await self.bot.delete_channel(channel)
+                    
                     break
 
 
@@ -466,14 +468,14 @@ class mafia:
                     nom = discord.Embed(title = "Players:", colour = discord.Colour.purple())
 
                     embed = self.makeEmbed("Alright! Any nominations? Just type them in the chat. You have 15 seconds to submit each nomination.")
-                    embed.set_footer(text = "IMPORTANT: The timer resets everytime a message is sent, so please for the love of God stop sending messages if you're done.")
+                    embed.set_footer(text = "IMPORTANT: The timer resets everytime a message is sent, so please don't use this channel to chat.")
                     await self.bot.send_message(channel, embed = embed)
 
                     for item in tempC:
                         nom.add_field(name = "{}".format(item.lower()), value = "Pick me!", inline = False)
 
                     await self.bot.send_message(channel, embed = nom)
-
+                    await asyncio.sleep(3)
                     overwrite = discord.PermissionOverwrite()
                     overwrite = discord.PermissionOverwrite()
                         
@@ -526,20 +528,23 @@ class mafia:
                     # voting time
                     if self.nominateList:
                         overwrite = discord.PermissionOverwrite()
-                        
+                        aliveCount = 0
                         for player, data in currentP.items():
                           if data.alive == True:
                             overwrite.send_messages = True
                             await self.bot.edit_channel_permissions(channel, player, overwrite)
+                            aliveCount += 1
                           else:
                             overwrite.send_messages = False
                             await self.bot.edit_channel_permissions(channel, player, overwrite)
                         
+                        reqVote = int(aliveCount/2)
+
                         authors = []
                         scoreName = []
                         score = []
                         embed = self.makeEmbed("Ok! Now it's time to vote!")
-                        embed.add_field(name = " The person with the most votes dies.", value = "However, the person must have at least 2 or more votes.")
+                        embed.add_field(name = " The person with the most votes dies.", value = "However, the person must have at least {} or more votes.".format(reqVote))
                         await self.bot.send_message(channel, embed = embed)
                         for item in self.nominateList:
                             scoreName.append(item)
@@ -580,7 +585,7 @@ class mafia:
                         # finds largest vote
                         largestVote = 0
                         for item in score:
-                            if item > largestVote and item > 1:
+                            if item > largestVote and item > (reqVote-1):
                                 largestVote = item
                             elif item == largestVote:
                                 largestVote = 0
@@ -614,40 +619,34 @@ class mafia:
                       for player, data in currentP.items():
                           if player.name.lower() == deadGuy and data.roleName == "jester":
                               jesterWins = True
+
+                    #check conditions
                     if jesterWins == True:
                         for player in currentP.keys():
                           await self.bot.server_voice_state(player, mute = False)
                         embed = discord.Embed(title = "Uh oh! The Jester wins!", colour = discord.Colour.purple())
                         embed.set_thumbnail(url = "https://runes.lol/image/generated/championtiles/Shaco.jpg")
-                        self.displayAllR(embed, currentP)
-                        await asyncio.sleep(2)
-                        await self.bot.send_message(channel, embed = embed)
-                        await asyncio.sleep(10)
-                        await self.bot.delete_channel(channel)
                         break
                     elif check == "m":
                         for player in currentP.keys():
                           await self.bot.server_voice_state(player, mute = False)
                         embed = discord.Embed(title = "The mafia(s) win!", colour = discord.Colour.purple())
-                        self.displayAllR(embed, currentP)
-                        await self.bot.send_message(channel, embed = embed)
-                        await asyncio.sleep(10)
-                        await self.bot.delete_channel(channel)
                         break
                     elif check == "v":
                         for player in currentP.keys():
                           await self.bot.server_voice_state(player, mute = False)
                         embed = discord.Embed(title = "The villagers win!", colour = discord.Colour.purple())
-                        self.displayAllR(embed, currentP)
-                        await self.bot.send_message(channel, embed = embed)
-                        await asyncio.sleep(10)
-                        await self.bot.delete_channel(channel)
                         break
             for player in currentP.keys():
               await self.bot.server_voice_state(player, mute = False)
-        self.serverStatus[server.id]["ready"] = False
-        self.serverStatus[server.id]["gameOn"] = False
-                
+            self.displayAllR(embed, currentP)
+            await self.bot.send_message(channel, embed = embed)
+            await self.bot.send_message(channel, embed = self.makeEmbed("Thank you all for playing! Deleting this channel in 10 seconds"))
+            await asyncio.sleep(10)
+            await self.bot.delete_channel(channel)
+            self.serverStatus[server.id]["ready"] = False
+            self.serverStatus[server.id]["gameOn"] = False
+            self.commandStop = False        
                     
                     
 
@@ -680,8 +679,8 @@ class mafia:
     @commands.command(pass_context = True)
     async def helpC(self, ctx):
         embed = discord.Embed(title = "Mafia Commands", colour = discord.Colour.orange())
-        embed.add_field(name = "/joinP", value = "Joins the current mafia party.", inline = False)
-        embed.add_field(name = "/leaveP", value = "Leaves the current mafia party.", inline = False)
+        embed.add_field(name = "/join", value = "Joins the current mafia party.", inline = False)
+        embed.add_field(name = "/leave", value = "Leaves the current mafia party.", inline = False)
         embed.add_field(name = "/party", value = "Displays current party.", inline = False)
         embed.add_field(name = "/setGame", value = "Sets up the game.(Must do before /start)", inline = False)
         embed.add_field(name = "/start", value = "Starts the game with the current people in the mafia party. Must do /setGame first.", inline = False)
@@ -698,7 +697,7 @@ class mafia:
     async def helpGame(self, ctx):
         embed = discord.Embed(title = "Mafia Setup", colour = discord.Colour.orange())
         embed.add_field(name = "Requirement:", value = "There must be at least 5 people in the mafia party.", inline = False)
-        embed.add_field(name = "Joining the Game:", value = "Everyone playing must enter /joinP to join the party. Type /leaveP to leave the party.", inline = False)
+        embed.add_field(name = "Joining the Game:", value = "Everyone playing must enter /join to join the party. Type /leave to leave the party.", inline = False)
         embed.add_field(name = "Step 1", value = "Enter /setGame to set up and assign the roles for the game.", inline = False)
         embed.add_field(name = "Step 2", value = "Enter /start to start the game.", inline = False)
         embed.add_field(name = "Step 3", value = "Play", inline = False)

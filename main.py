@@ -4,7 +4,7 @@ import asyncio
 import json
 import os
 import random
-
+import traceback
 bot = commands.Bot(command_prefix='/')
 bot.remove_command('help')
 
@@ -14,7 +14,8 @@ players = {}
 async def on_ready():
     await bot.change_presence(game = discord.Game(name="/helpM", type=1))
     print("I'm in")
-  
+
+
 @bot.event
 async def on_message(message):
     if message.author != bot.user:
