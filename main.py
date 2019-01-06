@@ -9,7 +9,7 @@ import MAFIA.dbl as dblthing
 bot = commands.Bot(command_prefix='m.')
 bot.remove_command('help')
 
-extensions = ['mafia']
+extensions = ['mafia', 'Points', 'help']
 players = {}
 @bot.event
 async def on_ready():
@@ -19,16 +19,23 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    with open('players.json', 'r') as f:
+        players = json.load(f)
+    if not message.server is None:
+        if not message.server.id in players:
+            players[message.server.id] = {}
+    with open('players.json', 'w') as f:
+        json.dump(players, f)
     if message.author != bot.user:
         await bot.process_commands(message)
 
 @bot.event
 async def on_server_join(server):
-    print ("Joined server {}".format(server.name))
+    print ("Joined server ({})".format(server.name))
 
 @bot.event
 async def on_server_remove(server):
-    print ("Left server {}".format(server.name))
+    print ("Left server ({})".format(server.name))
 if __name__ == '__main__':
     for extension in extensions:
         try:
