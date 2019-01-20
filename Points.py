@@ -9,7 +9,7 @@ class Points:
         self.bot = bot
 
     @commands.command(pass_context = True)
-    async def info(self, ctx, user: discord.Member):
+    async def record(self, ctx, user: discord.Member):
         server = ctx.message.server
         if user == None:
             person = ctx.message.author
@@ -27,7 +27,7 @@ class Points:
             embed.add_field(name = "Total games played", value = "{}".format(games))
             embed.set_thumbnail(url = person.avatar_url)
         else:
-            embed = discord.Embed(title = "You don't have any records. Finish a game of Mafia to start!", colour = discord.Colour.gold())
+            embed = discord.Embed(title = "No records found. To start a record, finish a game of Mafia on this server!", colour = discord.Colour.gold())
         await self.bot.send_message(ctx.message.channel, embed = embed)
 
 

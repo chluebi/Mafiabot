@@ -14,25 +14,28 @@ players = {}
 @bot.event
 async def on_ready():
     dblthing.DiscordBotsOrgAPI(bot)
+    servers = len(list(bot.servers))
+    print (servers)
     await bot.change_presence(game = discord.Game(name="m.help", type=1))
     print("I'm in")
 
 @bot.event
 async def on_message(message):
-    with open('players.json', 'r') as f:
-        players = json.load(f)
-    if not message.server is None:
-        if not message.server.id in players:
-            players[message.server.id] = {}
-    with open('players.json', 'w') as f:
-        json.dump(players, f)
     if message.author != bot.user:
         await bot.process_commands(message)
 
 @bot.event
 async def on_server_join(server):
     print ("Joined server ({})".format(server.name))
-
+    
+@bot.event
+async def on_command_error(error, ctx):
+    if isinstance(error, commands.BadArgument):
+        await bot.send_message(ctx.message.channel, "Error. Bad argument.")
+    elif isinstance(error, commands.MissingRequiredArgument):
+        await bot.send_message(ctx.message.channel, "Required arugment is missing.")
+    else:
+        await bot.send_message(ctx.message.channel, "Unknown command. For help on my commands enter m.helpC.")
 @bot.event
 async def on_server_remove(server):
     print ("Left server ({})".format(server.name))
