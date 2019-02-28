@@ -15,9 +15,9 @@ players = {}
 async def on_ready():
     dblthing.DiscordBotsOrgAPI(bot)
     servers = len(list(bot.servers))
-    print (servers)
+    print ("Currently on {} servers!".format(servers))
     await bot.change_presence(game = discord.Game(name="m.help", type=1))
-    print("I'm in")
+    print("Mafiabot is online!")
 
 @bot.event
 async def on_message(message):
@@ -26,19 +26,13 @@ async def on_message(message):
 
 @bot.event
 async def on_server_join(server):
-    print ("Joined server ({})".format(server.name))
-    
-@bot.event
-async def on_command_error(error, ctx):
-    if isinstance(error, commands.BadArgument):
-        await bot.send_message(ctx.message.channel, "Error. Bad argument.")
-    elif isinstance(error, commands.MissingRequiredArgument):
-        await bot.send_message(ctx.message.channel, "Required arugment is missing.")
-    else:
-        await bot.send_message(ctx.message.channel, "Unknown command. For help on my commands enter m.helpC.")
+    print ("Joined server ({}: {} members) ".format(server.name, len(server.members)))
+
+
+
 @bot.event
 async def on_server_remove(server):
-    print ("Left server ({})".format(server.name))
+    print ("Left server ({}: {} members) ".format(server.name, len(server.members)))
 if __name__ == '__main__':
     for extension in extensions:
         try:

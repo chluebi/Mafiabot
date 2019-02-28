@@ -3,6 +3,7 @@ from discord.ext import commands
 import asyncio
 import os
 import random
+from random import randint
 import MAFIA.playerinfo as playerinfo
 import MAFIA.gvar as gvar
 
@@ -21,10 +22,12 @@ class prepare:
         
     def setRole(self, roleName, unassignedPlayers):
         sel = random.choice(unassignedPlayers)
+        
         self.mafiaPlayers[sel] = playerinfo.Player(roleName, True)
         unassignedPlayers.remove(sel)
 
     def assignRoles(self):
+
         unassignedPlayers = list(self.mafiaPlayers.keys())
         
         count = 0
@@ -48,11 +51,9 @@ class prepare:
         for _ in range(detectiveCount):
             self.setRole("detective", unassignedPlayers)
 
-
+        
         if len(self.mafiaPlayers.keys()) > 5:
-            chance = self.randInt(70, 100)
-            if chance == True:
-                self.setRole("suspect", unassignedPlayers)
+            self.setRole("vigilante", unassignedPlayers)
         if len(self.mafiaPlayers.keys()) > 4:
             self.setRole("jester", unassignedPlayers)
         for _ in range(len(unassignedPlayers)):

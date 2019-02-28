@@ -19,9 +19,10 @@ class storyTime:
     "{} was sitting in his/her room watching youtube, when suddenly he/she heard a doorbell. He/she opened the door and saw a box on the ground. The box exploded and {} sadly died.",
     "{} was found dead in a room. {} thought it was bdsm. Turns out, he/she was whipped to death.",
     "{} trained in martial arts by watching Bruce Lee movies, and now he/she decided that he is now the master of fighting. {} was later found dead in a dark alley. What a legend.", 
-    "{} wanted to buy a league of legend ski, but he/she is out of money, so {} decided to loan some money from the Mafia. The body was found 2 hours later."]
+    "{} wanted to buy the fortnite battlepass, but he/she is out of money, so {} decided to loan some money from the Mafia. The body was found 2 hours later.",
+    "{} was too busy playing fortnite and didn't hear the door open, {} was shot and didnt get that epic victory royale."]
 
-    goodS = ["{} ate a cookie and started choking. Luckily the doctor was nearby and saved him/her. Turns out someone replaced the chocolate chips with rocks. Ew.",
+    goodS = ["{} ate a cookie and started choking. Luckily the doctor was nearby and saved {}. Turns out someone replaced the chocolate chips with rocks. Ew.",
     "{} was playing hearthstone when suddenly the computer exploded. Thankfully the doctor was outside the house and saved him/her just in time. Sadly {} lost the match due to afk and is still stuck in rank 25.",
     "One day {} saw a kitten on the road. When he/she went over to pet it the kitten exploded. Thankfully {} survived because the doctor was there.",
     "{} was eating ice cream at a park when he/she started feeling ill and collapsed. Thankfully the doctor was there and took {} to a hospital quickly.",
