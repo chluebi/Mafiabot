@@ -4,10 +4,18 @@ import dbl
 class helpC:
     def __init__(self, bot):
         self.bot = bot
-        self.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjUxMTc4NjkxODc4MzA5MDY4OCIsImJvdCI6dHJ1ZSwiaWF0IjoxNTQ2NjU0ODk3fQ.hADbMQxWCw0czaTDcVUpqAdCUzEpHngQUw-HtQeHVV8'
-        self.dblpy = dbl.Client(self.bot, self.token)
 
-
+    @commands.command(pass_context = True)
+    async def updates(self, ctx):
+        update = discord.Embed(title = "Latest Mafia Updates", description = "March 21, 2019", colour = discord.Colour.blue())
+        update.add_field(name = "Bug fixes:", value = "Fixed the bug where the vigilante and his/her victim is still alive after the vigilante shoots the victim.")
+        #update.add_field(name = "Renamed commands:", value = "m.stopGame is now m.stop, and m.clearParty is now m.clear.")
+        #update.add_field(name = "Permission change:", value = "m.stop and m.clear are now accessible to all roles.")
+        #update.add_field(name = "New commands: m.custom and m.setting", value = "Customizable settings for Mafiabot!")
+        update.add_field(name = "Customable settings now have restrictions", value = "You can't set discussion time to something like 10000000000 seconds now")
+        update.add_field(name= "Default settings are now lower so people don't have to wait 2 min.", value = "Use m.settings to see the current settings on your server!")
+        update.set_image(url = "https://pbs.twimg.com/media/DNgdaynV4AAEoQ7.jpg")
+        await self.bot.send_message(ctx.message.channel, embed = update)
     @commands.command(pass_context = True)
     async def perms(self, ctx):
         
@@ -27,6 +35,7 @@ class helpC:
         info.set_thumbnail(url = self.bot.user.avatar_url)
         info.add_field(name = "What I do:", value = "Host mafia on your discord server!", inline = False)
         info.add_field(name = "What are my commands?", value = "My commands can be found with m.help.", inline = False)
+        info.add_field(name = "Find out what's the latest update with the command:", value = "m.updates", inline = False)
         info.add_field(name = "Library", value = "discord.py", inline = True)
         info.add_field(name = "Currently on:", value = "{} servers!".format(len(self.bot.servers)), inline = True)
         info.add_field(name = "Creator:", value = "<@217380909815562241>", inline = True)
@@ -81,11 +90,16 @@ class helpC:
         embed.add_field(name = "m.info", value = "Shows the bot's information!", inline = False)
         embed.add_field(name = "m.perms", value = "Shows the bot's required permissions and stuff in order to function correctly in the server!", inline = False)
         embed.add_field(name = "m.join", value = "Joins the current mafia party.", inline = False)
+        embed.add_field(name = "m.updates", value = "Shows the latest updates!", inline = False)
         embed.add_field(name = "m.leave", value = "Leaves the current mafia party.", inline = False)
         embed.add_field(name = "m.party", value = "Displays current party.", inline = False)
+        embed.add_field(name = "m.stop", value = "With this command, the bot will stop the current game after the round finishes.")
+        embed.add_field(name = "m.clear", value = "Clears current party.")
         embed.add_field(name = "m.setup", value = "Sets up the game.(Must do before m.start)", inline = False)
         embed.add_field(name = "m.start", value = "Starts the game with the current people in the mafia party. Must do m.setup first.", inline = False)
         embed.add_field(name = "m.record @person", value = "Reveals information about a person's game record.", inline = False)
+        embed.add_field(name = "m.custom (setting) (time)", value = "Customizes settings for the game on the server. (Ex. 'm.custom dmTime 20' sets the limited time players in dm can respond to 20 seconds.)")
+        embed.add_field(name = "All customizable settings: ", value = "dmtime: amount of time people can respond to dm messages, talkTime: amount of time for group discussion, voteTime: Amount of time to vote.")
         embed.set_footer(text = "For more information, type m.game for how the game works, m.roles for roles and m.helpAdmin to see admin commands.")
         try:
             await self.bot.send_message(ctx.message.author, embed = embed)
@@ -99,9 +113,7 @@ class helpC:
       stuff = discord.Embed(title = "Info on admin commands has been sent to your dm!", colour = discord.Colour.orange())
       await self.bot.send_message(ctx.message.channel, embed = stuff)
       embed = discord.Embed(title = "Admin Commands", colour = discord.Colour.orange())
-      embed.add_field(name = "m.clearParty", value = "Clears current party.")
-      embed.add_field(name = "m.stopGame", value = "With this command, the bot will stop the current game after the round finishes.")
-      embed.add_field(name = "m.reset", value = "Resets ALL Mafiabot's variables(setup, stopGame). ONLY USE THIS WHEN THE BOT HAS CRASHED. DO NOT USE THIS WHEN A GAME IS RUNNING JUST FINE.")
+      embed.add_field(name = "m.reset", value = "Resets ALL Mafiabot's variables(setup, stop). ONLY USE THIS WHEN THE BOT HAS CRASHED. DO NOT USE THIS WHEN A GAME IS RUNNING JUST FINE.")
       embed.set_footer(text = "For more information, type m.help for commands, m.roles for roles, and m.game for game rules.")
       await self.bot.send_message(ctx.message.author, embed = embed)
 

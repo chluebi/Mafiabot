@@ -21,8 +21,9 @@ class prepare:
         self.bot = bot
         
     def setRole(self, roleName, unassignedPlayers):
-        sel = random.choice(unassignedPlayers)
-        
+        randthing = random.randint(3, 150)
+        for _ in range(randthing):
+            sel = random.choice(unassignedPlayers)
         self.mafiaPlayers[sel] = playerinfo.Player(roleName, True)
         unassignedPlayers.remove(sel)
 

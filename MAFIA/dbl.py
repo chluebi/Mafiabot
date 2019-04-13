@@ -22,7 +22,6 @@ class DiscordBotsOrgAPI:
         while True:
             print('attempting to post server count')
             try:
-                
                 await self.dblpy.post_server_count()
                 print('posted server count')
             except Exception as e:
