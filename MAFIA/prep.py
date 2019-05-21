@@ -30,7 +30,7 @@ class prepare:
     def assignRoles(self):
 
         unassignedPlayers = list(self.mafiaPlayers.keys())
-        
+        extraRoles = ["framer", "jester", "vigilante", "major"]
         count = 0
         mafiaCount = 0
         for _ in range(len(unassignedPlayers)):
@@ -51,12 +51,14 @@ class prepare:
         detectiveCount = 1 # see above
         for _ in range(detectiveCount):
             self.setRole("detective", unassignedPlayers)
-
-        
-        if len(self.mafiaPlayers.keys()) > 5:
-            self.setRole("vigilante", unassignedPlayers)
-        if len(self.mafiaPlayers.keys()) > 4:
-            self.setRole("jester", unassignedPlayers)
+        count = len(unassignedPlayers)
+        print(count)
+        while (count > 1 and len(extraRoles) != 0):
+            role = random.choice(extraRoles)
+            self.setRole(role, unassignedPlayers)
+            print(role)
+            extraRoles.remove(role)
+            count-=1
         for _ in range(len(unassignedPlayers)):
             self.setRole("villager", unassignedPlayers)
             

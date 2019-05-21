@@ -4,16 +4,24 @@ import dbl
 class helpC:
     def __init__(self, bot):
         self.bot = bot
-
+        self.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjUxMTc4NjkxODc4MzA5MDY4OCIsImJvdCI6dHJ1ZSwiaWF0IjoxNTQ2NjU0ODk3fQ.hADbMQxWCw0czaTDcVUpqAdCUzEpHngQUw-HtQeHVV8'  #  set this to your DBL token
+        self.dblpy = dbl.Client(self.bot, self.token)
+    @commands.command(pass_context = True)
+    async def getVoters(self, ctx):
+        temp = []
+        for item in await self.dblpy.get_upvote_info():
+            temp.append(item['username'])
+        await self.bot.send_message(ctx.message.channel, temp)
     @commands.command(pass_context = True)
     async def updates(self, ctx):
-        update = discord.Embed(title = "Latest Mafia Updates", description = "March 21, 2019", colour = discord.Colour.blue())
-        update.add_field(name = "Bug fixes:", value = "Fixed the bug where the vigilante and his/her victim is still alive after the vigilante shoots the victim.")
+        update = discord.Embed(title = "Latest Mafia Updates", description = "Patch 1.3", colour = discord.Colour.blue())
+        update.add_field(name = "New role: Framer!", value = "Side: Mafia. Frames a person to look like the mafia each night. If there are no more mafias the framer becomes the mafia.")
         #update.add_field(name = "Renamed commands:", value = "m.stopGame is now m.stop, and m.clearParty is now m.clear.")
         #update.add_field(name = "Permission change:", value = "m.stop and m.clear are now accessible to all roles.")
-        #update.add_field(name = "New commands: m.custom and m.setting", value = "Customizable settings for Mafiabot!")
-        update.add_field(name = "Customable settings now have restrictions", value = "You can't set discussion time to something like 10000000000 seconds now")
-        update.add_field(name= "Default settings are now lower so people don't have to wait 2 min.", value = "Use m.settings to see the current settings on your server!")
+        update.add_field(name = "New role: Mayor!", value = "Side: Villager. The mayor has the power to reveal himself/herself and gain two votes in the town.")
+        update.add_field(name = "New role system", value = "All non-classic roles(Vigilante, jester,framer, etc) will now be randomized in each game. This means there will be different roles in each game regardless of the group size.")
+        update.add_field(name = "Fixed bugs", value = "Now vc is no longer required! Hooray!")
+        update.add_field(name = "Visual updates", value = "Lots of pictures now to make everything easier to understand.")
         update.set_image(url = "https://pbs.twimg.com/media/DNgdaynV4AAEoQ7.jpg")
         await self.bot.send_message(ctx.message.channel, embed = update)
     @commands.command(pass_context = True)
@@ -79,6 +87,8 @@ class helpC:
         embed.add_field(name = "Suspect", value = "Side: Villager. When inspected by the detective, the suspect would return Mafia, even though the suspect is on the villager's side. The suspect won't know that he/she is a suspect. There must be at least 6 people to have a chance of gaining this role.", inline = False)
         embed.add_field(name = "Jester", value = "Side: Neutral. Your goal is to get lynched by the mob in order to win.", inline = False)
         embed.add_field(name = "Vigilante", value = "Side: Villager. Your goal is shoot all the mafias. However if you shoot the wrong person you commit suicide.", inline = False)
+        embed.add_field(name = "Mayor", value = "Side: Villager. You can reveal your role to everyone to gain two votes per voting session.", inline = False)
+        embed.add_field(name = "Framer", value = "Side: Mafia. You can frame a person to look like the mafia to the detective. The framer becomes the mafia if there are no more mafias.", inline = False)
         embed.set_footer(text = "For more information, type m.game for how the game works, m.help for commands.")
         await self.bot.send_message(ctx.message.author, embed = embed)
     

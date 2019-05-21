@@ -20,7 +20,8 @@ class storyTime:
     "{} was found dead in a room. {} thought it was bdsm. Turns out, he/she was whipped to death.",
     "{} trained in martial arts by watching Bruce Lee movies, and now he/she decided that he is now the master of fighting. {} was later found dead in a dark alley. What a legend.", 
     "{} wanted to buy the fortnite battlepass, but he/she is out of money, so {} decided to loan some money from the Mafia. The body was found 2 hours later.",
-    "{} was too busy playing fortnite and didn't hear the door open, {} was shot and didnt get that epic victory royale."]
+    "{} was too busy playing fortnite and didn't hear the door open, {} was shot and didnt get that epic victory royale.", "A large birthday party was thrown for {} and all their friends were present. During the birthday song, a stranger snuck up behind {} and pantsed them. The victim, flushed with embarrassment, died instantly.", 
+    "{} challenged the mafia to a 1v1 basketball match. Down by two points, the mafioso stepped behind the three-point line and shot. {} was later found dead with a bullet wound in his chest."]
 
     goodS = ["{} ate a cookie and started choking. Luckily the doctor was nearby and saved {}. Turns out someone replaced the chocolate chips with rocks. Ew.",
     "{} was playing hearthstone when suddenly the computer exploded. Thankfully the doctor was outside the house and saved him/her just in time. Sadly {} lost the match due to afk and is still stuck in rank 25.",
