@@ -16,8 +16,9 @@ class prepare:
         else:
             return False
 
-    def __init__(self, bot, mafiaPlayers):
+    def __init__(self, bot, mafiaPlayers, mode):
         self.mafiaPlayers = mafiaPlayers
+        self.mode = mode
         self.bot = bot
         
     def setRole(self, roleName, unassignedPlayers):
@@ -30,7 +31,7 @@ class prepare:
     def assignRoles(self):
 
         unassignedPlayers = list(self.mafiaPlayers.keys())
-        extraRoles = ["framer", "jester", "vigilante", "major"]
+        extraRoles = ["framer", "jester", "vigilante", "mayor"]
         count = 0
         mafiaCount = 0
         for _ in range(len(unassignedPlayers)):
@@ -51,14 +52,15 @@ class prepare:
         detectiveCount = 1 # see above
         for _ in range(detectiveCount):
             self.setRole("detective", unassignedPlayers)
-        count = len(unassignedPlayers)
-        print(count)
-        while (count > 1 and len(extraRoles) != 0):
-            role = random.choice(extraRoles)
-            self.setRole(role, unassignedPlayers)
-            print(role)
-            extraRoles.remove(role)
-            count-=1
+        if (self.mode == "crazy"):
+            count = len(unassignedPlayers)
+            print(count)
+            while (count > 1 and len(extraRoles) != 0):
+                role = random.choice(extraRoles)
+                self.setRole(role, unassignedPlayers)
+                print(role)
+                extraRoles.remove(role)
+                count-=1
         for _ in range(len(unassignedPlayers)):
             self.setRole("villager", unassignedPlayers)
             
