@@ -1,0 +1,15 @@
+Noob: 20
+Clueless:30
+Talker:40
+Sly:40
+Mad:40
+Troll:50
+Deceiver:50
+Bad-Cop:50
+Interrogator:50
+Sharpshooter:50
+Maniac:50
+Silvertongue:50
+Judge:75
+Big-Brain:80
+Linkboi:10000

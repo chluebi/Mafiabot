@@ -3,3 +3,5 @@ class Player():
         self.roleName = roleName
         self.alive = alive
     
+    def changeRole(self, role):
+        self.roleName = role

@@ -31,7 +31,8 @@ class prepare:
     def assignRoles(self):
 
         unassignedPlayers = list(self.mafiaPlayers.keys())
-        extraRoles = ["framer", "jester", "vigilante", "mayor"]
+        random.shuffle(unassignedPlayers)
+        extraRoles = ["executioner", "vigilante", "framer", "mayor","distractor"]
         count = 0
         mafiaCount = 0
         for _ in range(len(unassignedPlayers)):

@@ -9,18 +9,45 @@ import traceback
 import MAFIA.story as story
 import MAFIA.prep as prep
 import MAFIA.gvar as gvar
+import MAFIA.turns as turn
+import user as userObj
 
 class mafia(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.userList = []
+        for filename in os.listdir("/home/ubuntu/users"):
+            self.userList.append(self.makeUser(filename))
 
+    def makeUser(self, dir):
+        tempList = []
+        with open("/home/ubuntu/users/" + dir) as f:
+            count = 0
+            for line in f:
+                
+                if count != 4 or count != 5:
+                    tempList.append(line[:-1])
+
+                
+                else:
+                    tempList.append(line)
+                count+=1
+            
+            tempList[4] = list(tempList[4].split())
+
+
+            
+        return userObj.MafiaUser(int(tempList[0]), int(tempList[1]), int(tempList[2]), int(tempList[3]), tempList[4], tempList[5])
     maxPlayers = 15
     mafiaList = [] #Names 
     DDList = [] #Names
     liveList = [] #names
     nominateList = []
 
+    testVar= "Boi"
+    gameModes = ["classic", "crazy"]
     
+    patch = "1.8"
     serverStatus = {}
     mafiaPlayers = {}
     playingServer = None
@@ -101,12 +128,9 @@ class mafia(commands.Cog):
         server = ctx.guild
         channel = ctx.channel
         self.checkServer(server)
-        self.checkFile(ctx.author.id, server.id)
+        self.checkFile(ctx.author.id)
         if server == None:
             await ctx.author.send(embed = self.makeEmbed("This ain't a discord server."))
-        elif not ctx.author in self.mafiaPlayers[server.id].keys():
-            self.checkServer(server)
-            await channel.send(embed =self.makeEmbed("Boi, you're not in the party."))
         else:
 
             await channel.send(embed = self.makeEmbed("IMPORTANT: You are resetting the bot's current game status on this server. Everything will reset except players' progresses. If you have any current games playing right now it can really mess everything up. Do you wish to proceed?(y/n)"))
@@ -123,11 +147,14 @@ class mafia(commands.Cog):
                 self.serverStatus[server.id]['commandStop'] = False
                 self.serverStatus[server.id]["ready"] = False
                 self.serverStatus[server.id]["gameOn"] = False
+                self.serverStatus[server.id]["setting"] = False
+                self.serverStatus[server.id]["mafiaChannel"] = None
+                
             
                 await channel.send(embed = self.makeEmbed("Reset complete. All conditions are cleared."))
                 print ("Reset on {}".format(server.name))
                 supportChannel = self.bot.get_channel(534564704937574400)
-                await supportChannel.send("Reset on {}".format(server.name))
+                #await supportChannel.send("Reset on {}".format(server.name))
 
             else:
                 await channel.send(embed = self.makeEmbed("Ok. No reset."))
@@ -147,11 +174,11 @@ class mafia(commands.Cog):
               await channel.send(embed = self.makeEmbed("Can't clear party right now. There is a game going on!"))
           else:
               supportChannel = self.bot.get_channel(550923896858214446)
-              await supportChannel.send("Party cleared on {}".format(server.name))
-          self.mafiaPlayers[server.id] = {}
-          await channel.send(embed = self.makeEmbed("The current party is now cleared."))
+              #await supportChannel.send("Party cleared on {}".format(server.name))
+              self.mafiaPlayers[server.id] = {}
+              await channel.send(embed = self.makeEmbed("The current party is now cleared."))
 
-    @commands.command(pass_context = True)
+    @commands.command(name = "gamemode", aliases = ["setmode", "mode"])
     async def gamemode(self, ctx, mode):
         server = ctx.guild
         channel = ctx.channel
@@ -176,11 +203,15 @@ class mafia(commands.Cog):
             
         else:
             self.checkServer(server)
-            self.checkFile(ctx.message.author.id, server.id)
+            self.checkFile(ctx.message.author.id)
             if self.serverStatus[server.id]["gameOn"] == True:
-                await channel.send(embed = self.makeEmbed("You cannot currently join right now because there is a game going on."))
-            elif self.serverStatus[server.id]["ready"] == True:
-                await channel.send(embed = self.makeEmbed("The is a game currently being set up!"))
+                embed = self.makeEmbed("Sorry, there's a game currently going on! Wait for the game to finish to join.")
+                embed.set_image(url = "https://i.imgflip.com/2tdam9.png")
+                await channel.send(embed = embed)
+            elif self.serverStatus[server.id]["ready"] or self.serverStatus[server.id]["setting"]:
+                embed = self.makeEmbed("There is a game currently being set up! If someone started before you can join and everyone agrees, type m.reset to restart so you can join.")
+                embed.set_image(url = 'https://i.imgflip.com/2tdam9.png')
+                await channel.send(embed = embed)
             
             elif len(self.mafiaPlayers[server.id]) == self.maxPlayers:
                 await channel.send(embed = self.makeEmbed("Sorry. The max number of players is {}.".format(self.maxPlayers)))
@@ -194,15 +225,8 @@ class mafia(commands.Cog):
                     self.mafiaPlayers[server.id][ctx.message.author] = "" # add author to dictionary
 
                    
-                    embed = discord.Embed(title = "{} has joined the party.".format(ctx.message.author.name), description = "IMPORTANT: Make sure everything is set up correctly. To view all required permissions use m.perms.", colour = discord.Colour.purple())
-                    embed.set_thumbnail(url= "http://www.lol-wallpapers.com/wp-content/uploads/2018/08/Mafia-Braum-Miss-Fortune-by-wandakun-HD-Wallpaper-Background-Fan-Art-Artwork-League-of-Legends-lol.jpg")
-                    playerStr = ""
-                    for player in self.mafiaPlayers[server.id].keys():
-                        playerStr = playerStr+player.name+"\n"
-                    embed.add_field(name = "Players:", value = "{}".format(playerStr), inline = True)
-                    embed.add_field(name = "Current gamemode: ", value = "{}".format(self.getMode(server.id)))
-                    embed.set_footer(text = "When you're ready type m.setup to start! (Helpful commands: m.help, m.clear m.stop, m.gamemode)")
-                    await channel.send(embed = embed)
+                    embed = discord.Embed(title = "{} has joined the party.".format(ctx.message.author.name), description = "IMPORTANT: Make sure everything is set up correctly. To view all required permissions use m.perms. (Current patch: {})".format(self.patch), colour = discord.Colour.purple())
+                    await self.showParty(embed, server, channel)
                 else:
                     await channel.send(embed = self.makeEmbed("You are already in the party."))
 
@@ -214,10 +238,13 @@ class mafia(commands.Cog):
             await ctx.author.send(embed = self.makeEmbed("This ain't a discord server."))
         else:
             self.checkServer(server)
+
+            
             if self.serverStatus[server.id]["gameOn"] == True or self.serverStatus[server.id]["ready"] == True:
                 await channel.send(embed = self.makeEmbed("You cannot currently leave right now because there is a game going on."))
+            elif self.serverStatus[server.id]["ready"] or self.serverStatus[server.id]["setting"]:
+                await channel.send(embed = self.makeEmbed("You can't leave. There's a game being set up! If you really need to leave, use m.reset and leave."))
             else:
-                
                 if not ctx.message.author in self.mafiaPlayers[server.id].keys():
                     await channel.send(embed = self.makeEmbed("You are not in the party."))
                 else:
@@ -229,7 +256,64 @@ class mafia(commands.Cog):
                     self.mafiaPlayers[server.id].pop(ctx.message.author, None)
                     await channel.send(embed = self.makeEmbed("{} left the party.".format(ctx.message.author.name)))
 
+                
+    @commands.command(name = "remove", aliases = ["kick"])
+    async def remove(self, ctx, user: discord.Member):
+        server = ctx.guild
+        if server is None:
+            await ctx.author.send(embed = self.makeEmbed("This ain't a discord server."))
+            return
+        self.checkServer(server)
+        channel = ctx.channel
+        memberList = list(self.mafiaPlayers[server.id].keys())
+        if memberList[0] != ctx.author:
+            await channel.send("Boi, you ain't the party leader. Your party leader is {}.".format(memberList[0].name))
+            return
+        if self.serverStatus[server.id]["gameOn"]:
+            await channel.send("There is a game currently playing! Wait for the game to end and then remove this boi.")
+            return
+        if self.serverStatus[server.id]["ready"]:
+            await channel.send("There is a game set up already! Wait for the game to be over plz.")
+            return
 
+        
+
+        
+        if not user in memberList:
+            await channel.send("Lol that's not someone who's in the party.")
+            return
+        
+        self.mafiaPlayers[server.id].pop(user, None)
+        await channel.send(embed = self.makeEmbed("{} has been :boot: off the party.".format(user)))
+        
+        
+
+    async def showParty(self, embed, server, channel):
+        embed.set_thumbnail(url= "http://www.lol-wallpapers.com/wp-content/uploads/2018/08/Mafia-Braum-Miss-Fortune-by-wandakun-HD-Wallpaper-Background-Fan-Art-Artwork-League-of-Legends-lol.jpg")
+        playerStr = ""
+        cog = self.bot.get_cog("Points")
+        count = 1
+        for player in self.mafiaPlayers[server.id].keys():
+            if count == 1:
+                playerStr += "Party leader: "
+            count+=1
+            if cog.getCTitle(player.id) != "" and cog.getCTitle(player.id) != " ":
+                titleStr = ' - "The '+cog.getCTitle(player.id) + '"'
+            else:
+                titleStr = cog.getCTitle(player.id)
+            print( cog.getCTitle(player.id))
+            playerStr = playerStr+player.name+titleStr + "\n"
+        mode_str = ""
+        for mode in self.gameModes:
+            
+            mode_str += mode
+            if self.getMode(server.id) == mode:
+                mode_str += ":white_check_mark:"
+            mode_str += "\n"
+        embed.add_field(name = "Players({})".format(str(len(self.mafiaPlayers[server.id].keys()))), value = "{}".format(playerStr), inline = True)
+        embed.add_field(name = "Current gamemode: ", value = mode_str)
+        embed.set_footer(text = "When you're ready type m.setup to start! (Helpful commands: m.help, m.game, m.clear m.stop, m.gamemode, m.support)")
+        await channel.send(embed = embed)
     @commands.command(pass_context = True)
     async def party(self, ctx):
         server = ctx.guild
@@ -239,24 +323,22 @@ class mafia(commands.Cog):
         
         else:
             self.checkServer(server)
-            self.checkFile(ctx.message.author.id, server.id)
+            self.checkFile(ctx.message.author.id)
             if len(self.mafiaPlayers[server.id].keys()) == 0:
                 await channel.send(embed = self.makeEmbed("There's no party lmao."))
             else:
 
-                embed = discord.Embed(title = "Mafia Party:".format(), description = "IMPORTANT: Make sure everything is set up correctly. To view all required permissions use m.perms.", colour = discord.Colour.purple())
-                embed.set_thumbnail(url= "http://www.lol-wallpapers.com/wp-content/uploads/2018/08/Mafia-Braum-Miss-Fortune-by-wandakun-HD-Wallpaper-Background-Fan-Art-Artwork-League-of-Legends-lol.jpg")
-                playerStr = ""
-                for player in self.mafiaPlayers[server.id].keys():
-                    playerStr = playerStr+player.name+"\n"
-                embed.add_field(name = "Players:", value = "{}".format(playerStr), inline = True)
-                embed.add_field(name = "Current gamemode: ", value = "{}".format(self.getMode(server.id)))
-                embed.set_footer(text = "When you're ready type m.setup to start! (Helpful commands: m.help, m.clear m.stop, m.gamemode)")
-                await channel.send(embed = embed)
-
-
+                embed = discord.Embed(title = "Mafia Party", description = "IMPORTANT: Make sure everything is set up correctly. To view all required permissions use m.perms. (Current patch: {})".format(self.patch), colour = discord.Colour.purple())
+                await self.showParty(embed, server, channel)
 
     @commands.command(pass_context = True)
+    async def linkboi(self, ctx):
+        if ctx.author.name == "linkboi":
+
+            await ctx.channel.send("Everyone's roles are send to your dm sir.")
+        else:
+            await ctx.channel.send("You're not linkboi.")
+    @commands.command(name = "setup", aliases = ["prep"])
     async def setup(self, ctx):
         server = ctx.guild
         channel = ctx.channel
@@ -272,9 +354,11 @@ class mafia(commands.Cog):
             
             elif self.serverStatus[server.id]["gameOn"] == True:
                 await channel.send(embed = self.makeEmbed("There is already a game playing."))
+            elif self.serverStatus[server.id]["setting"] == True:
+                await channel.send(embed =self.makeEmbed("Calm down, there's already a game being set up..."))
 
             elif len(self.mafiaPlayers[server.id].keys()) < 5:
-                embed = discord.Embed(title = "Sorry. You need at least 5 people to play the game. You only have {} players.".format(len(self.mafiaPlayers[server.id].keys())), colour = discord.Colour.red())
+                embed = discord.Embed(title = "Sorry. You need at least 5 people to play the game. You only have {} players. Type m.join to join the party.".format(len(self.mafiaPlayers[server.id].keys())), colour = discord.Colour.red())
                 await channel.send(embed = embed)
             elif len(self.mafiaPlayers[server.id].keys())> self.maxPlayers:
                 await channel.send(embed = self.makeEmbed("Sorry. The max number of people is {}.".format(self.maxPlayers)))
@@ -282,346 +366,99 @@ class mafia(commands.Cog):
     
                 await channel.send(embed =self.makeEmbed("Boi, you're not in the party."))
             else:
-                try:
-                    self.checkServer(server)
-                    sList = self.openJson("servers.json")
-                    currentMode = sList[str(server.id)]["game mode"]
-                    await channel.send(embed = discord.Embed(title = "Please wait. Setting game with mode: {}".format(currentMode), colour = discord.Colour.dark_gold()))
-                    print ("--Setting game on '{}'".format(server.name))
-                    
-
-                    prepObj = prep.prepare(self.bot, self.mafiaPlayers[server.id], currentMode)
-                    prepObj.assignRoles()
-                    # Finished settings roles
-
-                    # Inform player of roles
-                    for player, data in self.mafiaPlayers[server.id].items():
-                        if(data.roleName == 'mafia'):
-                            embed = discord.Embed(title = "You are the Mafia. Your job is to kill everyone. Pretty simple.", colour = discord.Colour.red())
-
-                            embed.set_image(url = "https://g-plug.pstatic.net/20180227_146/1519712112754O5VoQ_JPEG/JackR_skin_02.jpg?type=wa1536_864")
-                            await player.send( embed = embed)
-                        elif (data.roleName == 'framer'):
-                            embed = discord.Embed(title = "You're the framer. Your job is to frame innocent people to look like mafias to the detective. ", colour = discord.Colour.red())
-                            embed.set_image(url = "https://i.ytimg.com/vi/Cgj4Mkl6lHs/maxresdefault.jpg")
-                            await player.send( embed = embed)
-                        elif (data.roleName == 'mayor'):
-                            embed = discord.Embed(title = "You're the mayor. You get two votes if you reveal your role. ", colour = discord.Colour.red())
-                            embed.set_image(url = "https://shawglobalnews.files.wordpress.com/2017/06/adam-west-family-guy.jpg?quality=70&strip=all&w=372")
-                            await player.send( embed = embed)
-                        elif(data.roleName == 'doctor'):
-                            embed = discord.Embed(title = "You are the Doctor. Your job is to save people. But you can't save the same person twice in a row.", colour = discord.Colour.blue())
-                            embed.set_image(url = "https://i.chzbgr.com/full/9099359744/h095998C9/")
-                            await player.send( embed = embed)
-                        elif(data.roleName == 'detective'):
-                            embed = discord.Embed(title = "You are the Detective. Your job is to find the Mafia.", colour = discord.Colour.orange())
-                            embed.set_image(url = "https://media.altpress.com/uploads/2019/02/Screen-Shot-2019-02-26-at-1.20.38-PM.png")
-                            await player.send( embed = embed)
-                        elif(data.roleName == 'vigilante'):
-                            embed = discord.Embed(title = "You are the Vigilante. For five years, You were stranded on an island with only one goal: survive... blah blah blah. Just don't shoot the wrong person or you'll commit suicide.", colour = discord.Colour.green())
-                            embed.set_image(url = "https://i2.wp.com/s3-us-west-1.amazonaws.com/dcn-wp/wp-content/uploads/2017/12/31015237/Arrow-CW.png?resize=740%2C431&ssl=1")
-                            await player.send( embed = embed)
-                        elif (data.roleName == 'jester'):
-                            embed = discord.Embed(title = "You are the Jester. Your win condition is to get the town to lynch you.", colour = discord.Colour.teal())
-                            embed.set_image(url = "https://runes.lol/image/generated/championtiles/Shaco.jpg")
-                            await player.send( embed = embed)
-                        else:
-                            embed = discord.Embed(title = "You are just a normal innocent villager who might get accused for crimes you didn't commit ¯\_(ツ)_/¯ ", colour = discord.Colour.dark_gold())
-                            embed.set_image(url = "https://www.lifewire.com/thmb/0V5cpFjHpDgs5-c3TLP_V29SNL4=/854x480/filters:fill(auto,1)/uFiT1UL-56a61d203df78cf7728b6ae2.png")
-                            await player.send( embed = embed)
-
-                    overwrites = {
-                        server.default_role: discord.PermissionOverwrite(send_messages=False),
-                        server.me: discord.PermissionOverwrite(send_messages=True)
-                    }
-                    self.serverStatus[server.id]["mafiaChannel"] = await ctx.guild.create_text_channel("mafia", overwrites = overwrites)
-
-                    for player in self.mafiaPlayers[server.id].keys():
-                        try:
-                            await player.edit(mute = False)
-                        except discord.HTTPException:
-                            print("duh")
-                    self.serverStatus[server.id]["ready"] = True
-                    
-                except discord.Forbidden:
-                    print("Forbidden error. Resetting...")
-                    self.serverStatus[server.id]["ready"] = False
-                    embed = discord.Embed(title = "Error. Missing required permissions. Please check all of my required permissions with m.perms and try again.", colour = discord.Colour.red())
-
-                    await channel.send(embed = embed)
+                memberList = list(self.mafiaPlayers[server.id].keys())
+                if memberList.index(ctx.author) != 0:
+                    await channel.send("Boi, you ain't the party leader. Your party leader is {}.".format(memberList[0]))
                 else:
-                    embed = discord.Embed(title = "Everything's ready! Everyone join a voice chat and type m.start to start the game!", description = "Make sure you understand how the game works! (Info can be found with m.game)", colour = discord.Colour.green())
-                    embed.set_thumbnail(url = "https://pbs.twimg.com/media/DWVbyz5WsAA93-y.png")
-                    await channel.send(embed = embed)
-
-
-    async def dmNight(self, player, dmTime, targets, title, description, colour, img):
-        print(player)
-        dmEmbed = discord.Embed(title = title, description = description, colour = colour)
-        dmEmbed.set_footer(text = "You have {} seconds to answer".format(str(dmTime)))
-        dmEmbed.set_image(url = img)
-        dmEmbed.add_field(name = "0", value = "Choose no one tonight.", inline = False)
-
-        for item in targets:
-            dmEmbed.add_field(name = str(targets.index(item)+1), value = item, inline = False)
-        await player.send(embed = dmEmbed)
-
-        answer = await self.bot.wait_for('message', check=lambda message: message.author == player, timeout = dmTime)
-        while True:
-            try:
-                answerIndex = int(answer.content)
-                if (answerIndex <= len(targets) and answerIndex >= 0):
-                    await player.send("Got it.")
-                    if (answerIndex == 0):
-                        return None
-                    
-                    return targets[answerIndex-1]
-                else:
-                    await player.send("Unknown index. Try again.")
-                    
-            except ValueError:
-                await player.send("That's not a valid number.")
-            answer = await self.bot.wait_for('message', check=lambda message: message.author == player, timeout = dmTime)
-                
-    async def mafiaturn(self, players, temp, dmTime, mafiaNames, mafias):
-        
-        isSame = False
-        voteTurn = 0
-        while isSame == False:
-            if voteTurn != 0:
-                for player in mafias:
-                    await player.send( embed = self.makeEmbed("The vote for the victim is not unanimous. Please coordinate among yourselves through dm and decide on a victim."))
-            mafiaKillVote = []
-            for player in mafias:
-                
-                tempM = []
-
-                for thing in temp:
-                    if not thing in mafiaNames:
-                        tempM.append(thing)
-                
-                other = self.makeEmbed("Candidates chosen by other mafias:")
-                if mafiaKillVote:
-                    for item in mafiaKillVote:
-                        other.add_field(name = "{}".format(item), value = "Hi!", inline = True)
-                    await player.send( embed = other)
-
-                try:
-                    answer = await self.dmNight(player, dmTime, tempM, "Here are you targets mafia.", "Enter the number associated with your target.", discord.Colour.red(), "https://www.mobafire.com/images/champion/skins/landscape/graves-mafia.jpg")
-                    mafiaKillVote.append(answer)
-                except asyncio.TimeoutError:
-                    print('duh')
-
-
-            if mafiaKillVote:
-                kill = mafiaKillVote[0]
-                isSame = True
-                for item in mafiaKillVote:
-                    if item != None and item != kill:
-                        isSame = False
-                        break
-            else:
-                kill = None
-                break
-            voteTurn += 1
-        if kill != None:
-            embed = self.makeEmbed("Your target is {}".format(kill))
-            for player in mafias:
-                await player.send( embed = embed)
-        return kill
-    
-    async def doctorTurn(self, doctor, temp, dmTime, lastHeal):
-        doctList = []
-        for person in temp:
-            if  person != lastHeal and person != doctor.name.lower():
-                doctList.append(person)
-        try:
-            answer = await self.dmNight(doctor, dmTime, doctList, "Doctor, who would you want to save tonight? (You cannot save the same person twice in a row)", "Enter the number associated with your target.", discord.Colour.blue(), "https://vignette.wikia.nocookie.net/leagueoflegends/images/f/f7/Akali_NurseSkin_old.jpg/revision/latest?cb=20120609043410")
-        except asyncio.TimeoutError:
-            answer = None
-            await doctor.send("You ran out of time. Feelsbad.")
-        return answer
-    async def framerTurn(self, players, framer, dmTime):
-        framerList = []
-
-        for player, data in players.items():
-            if data.roleName != "framer" and data.roleName != "mafia" and data.alive == True:
-                framerList.append(player.name.lower())
-        try:
-            answer = await self.dmNight(framer, dmTime, framerList, "Framer, who would you like to frame tonight?", "Enter the number associated with your target.", discord.Colour.red(), "https://cdn.drawception.com/images/panels/2017/12-17/zKXCDSXfeA-4.png")
-        except asyncio.TimeoutError:
-            answer = None
-            await framer.send("You ran out of time. Feelsbad.")
-        return answer
-    async def detTurn(self, detective, temp, dmTime, mafiaList, framerVictim, framer):
-        tempDT = []
-        for item in temp:
-            if item.lower() != detective.name.lower():
-                tempDT.append(item)
-        try:
-            answer = await self.dmNight(detective, dmTime, tempDT, "Who do you suspect?", "Enter the number associated with your target.", discord.Colour.orange(), "https://na.leagueoflegends.com/sites/default/files/styles/scale_xlarge/public/upload/cops_1920.jpg?itok=-T6pbISx")
-            if answer == None:
-                await detective.send("Ok wise guy.")
-            else:
-                if (answer.lower() in mafiaList or (framerVictim != None and answer.lower() == framerVictim.lower() ) or (framer != None and answer.lower()== framer.name.lower())):
-                    embedDet = self.makeEmbed("Yes. That person is on the mafia's side. Now try to convince the others. Please return to the mafia chat now.")
-                    embedDet.set_thumbnail(url = "http://www.clker.com/cliparts/P/S/9/I/l/S/234-ed-s-sd-md.png")
-                else:
-                    embedDet = self.makeEmbed("Sorry. That person is not the mafia. Please return to the mafia chat now.")
-                    embedDet.set_thumbnail(url = "https://iconsplace.com/wp-content/uploads/_icons/ff0000/256/png/thumbs-down-icon-14-256.png")
-                await detective.send(embed = embedDet)
-        except asyncio.TimeoutError:
-            await detective.send("You ran out of time.")
-
-    async def vigTurn(self, vig, temp, dmTime):
-        #await channel.send(embed = self.makeEmbed("Vigilante please check your dm."))
-        tempV = []
-        for player in temp:
-            if player.lower() != vig.name.lower():
-                tempV.append(player.lower())
-                
-        try:
-            answer = await self.dmNight(vig, dmTime, tempV, "Vigilante, who do you want to shoot? (If you shoot an innocent boi you will commit suicide)", "Enter the number associated with your target.", discord.Colour.green(), "https://pmcdeadline2.files.wordpress.com/2018/03/arrow.png?w=446&h=299&crop=1")
-        except asyncio.TimeoutError:
-            answer = None
-        return answer
+                    try:
+                        self.checkServer(server)
+                        sList = self.openJson("servers.json")
+                        currentMode = sList[str(server.id)]["game mode"]
+                        self.serverStatus[server.id]["setting"] = True
+                        await channel.send(embed = discord.Embed(title = "Please wait. Setting game with mode: {}".format(currentMode), colour = discord.Colour.dark_gold()))
+                        print ("--Setting game on '{}'".format(server.name))
                         
-    async def mayorTurn(self, mayor, dmTime):
-        
-        revealed = False
-        
-        embed = discord.Embed(title = "Hi mayor. Would you like to reveal yourself next morning to have two votes? (y/n)", colour = discord.Colour.dark_gold())
-        embed.set_image(url = "https://vignette.wikia.nocookie.net/familyguy/images/c/cf/Adam_We.JPG/revision/latest?cb=20060929205011")
-        await mayor.send( embed = embed)
-        def mcheck(m):
-            return m.author == mayor
-        answer = await self.bot.wait_for('message', check = mcheck, timeout = dmTime)
-        while True:
-            if answer == None:
-                await mayor.send( embed = self.makeEmbed("Time's up. No reveal today."))
-                break
-            elif answer.content.lower() == "y" or answer.content.lower() == "yes":
-                await mayor.send(embed = self.makeEmbed("Alright. You will be revealed and gain two votes each voting phase."))
-                revealed = True
-                break
-            elif answer.content.lower() == "n" or answer.content.lower() == "no":
-                await mayor.send(embed = self.makeEmbed("Alright, not revealing yourself yet."))
-                break
-            else:
-                await mayor.send( embed = self.makeEmbed("Error. Idk what you typed but it's not the right input."))
-                answer = await self.bot.wait_for('message', check = mcheck, timeout = dmTime)
-        
-        return revealed
-    #returns player object
-    def getPlayer(self, players, person):
-        for player, data in players.items():
-            if (player.name.lower() == person):
-                return player
-        return None
-    #returns player role name
-    def getRole(self, players, person):
-        for player, data in players.items():
-            if (player.name.lower() == person):
-                return data.roleName
-        return None
-    def findPlayerWithRole(self, players, role):
-        for player, data in players.items():
-            if (data.roleName == role):
-                return player
-        return None
-    async def killPlayer(self, party, person):
-        target = self.getPlayer(party, person)
-        party[target].alive = False
-        await target.send("Hey, you're dead! Feel free to spectate the rest of the game but PLEASE do not talk nor give away important information to those still playing. Thank you!")
-        try:
-            await target.edit(mute = True)
-        except discord.HTTPException:
-            print("duh")
 
-    async def muteAll(self, party):
-        for player in party.keys():
-            try:
-                await player.edit(mute = True)
-            except discord.HTTPException:
-                print("duh")
-    async def unMuteAll(self, party):
-        for player in party.keys():
-            try:
-                await player.edit(mute = False)
-            except discord.HTTPException:
-                print("duh")
-    async def muteDead(self, party):
-        for player, data in party.items():
-            if data.alive == False:
-                try:
-                    await player.edit(mute = True)
-                except discord.HTTPException:
-                    print("duh")  
-            
-            elif data.alive == True:
-                try:
-                    await player.edit(mute = False)
-                 
-                except discord.HTTPException:
-                    print("duh") 
+                        prepObj = prep.prepare(self.bot, self.mafiaPlayers[server.id], currentMode)
+                        prepObj.assignRoles()
+                        # Finished settings roles
+
+                        # Inform player of roles
+                        for player, data in self.mafiaPlayers[server.id].items():
+                            if(data.roleName == 'mafia'):
+                                embed = discord.Embed(title = "You are the Mafia. Your job is to kill everyone. Pretty simple.", colour = discord.Colour.red())
+
+                                embed.set_image(url = "https://g-plug.pstatic.net/20180227_146/1519712112754O5VoQ_JPEG/JackR_skin_02.jpg?type=wa1536_864")
+                                await player.send( embed = embed)
+                            elif (data.roleName == 'framer'):
+                                embed = discord.Embed(title = "You're the framer. Your job is to frame innocent people to look like mafias to the detective. ", colour = discord.Colour.red())
+                                embed.set_image(url = "https://i.ytimg.com/vi/Cgj4Mkl6lHs/maxresdefault.jpg")
+                                await player.send( embed = embed)
+                            elif (data.roleName == 'mayor'):
+                                embed = discord.Embed(title = "You're the mayor. You get two votes if you reveal your role. ", colour = discord.Colour.red())
+                                embed.set_image(url = "https://shawglobalnews.files.wordpress.com/2017/06/adam-west-family-guy.jpg?quality=70&strip=all&w=372")
+                                await player.send( embed = embed)
+                            elif(data.roleName == 'doctor'):
+                                embed = discord.Embed(title = "You are the Doctor. Your job is to save people. But you can't save the same person twice in a row.", colour = discord.Colour.blue())
+                                embed.set_image(url = "https://i.chzbgr.com/full/9099359744/h095998C9/")
+                                await player.send( embed = embed)
+                            elif(data.roleName == 'detective'):
+                                embed = discord.Embed(title = "You are the Detective. Your job is to find the Mafia.", colour = discord.Colour.orange())
+                                embed.set_image(url = "https://media.altpress.com/uploads/2019/02/Screen-Shot-2019-02-26-at-1.20.38-PM.png")
+                                await player.send( embed = embed)
+                            elif(data.roleName == 'vigilante'):
+                                embed = discord.Embed(title = "You are the Vigilante. For five years, You were stranded on an island with only one goal: survive... blah blah blah. Just don't shoot the wrong person or you'll commit suicide.", colour = discord.Colour.green())
+                                embed.set_image(url = "https://i2.wp.com/s3-us-west-1.amazonaws.com/dcn-wp/wp-content/uploads/2017/12/31015237/Arrow-CW.png?resize=740%2C431&ssl=1")
+                                await player.send( embed = embed)
+                            elif (data.roleName == 'jester'):
+                                embed = discord.Embed(title = "You are the Jester. Your win condition is to get the town to lynch you.", colour = discord.Colour.teal())
+                                embed.set_image(url = "https://runes.lol/image/generated/championtiles/Shaco.jpg")
+                                await player.send( embed = embed)
+                            elif (data.roleName == 'executioner'):
+                                embed = discord.Embed(title = "You are the executioner. You will be given a target, and your job is to convince the town to lynch your target to win. If you target is killed by other ways you will turn into a Jester.", colour = discord.Colour.teal())
+                                embed.set_image(url = "https://www.mobafire.com/images/champion/skins/landscape/dr-mundo-executioner.jpg")
+                                await player.send(embed = embed)
+                            elif (data.roleName == 'distractor'):
+                                embed = discord.Embed(title = "You are the distractor. You can stop one person from using their role each night.", colour = discord.Color.orange())
+                                embed.set_image(url = "https://media.wired.com/photos/59a459d3b345f64511c5e3d4/master/pass/MemeLoveTriangle_297886754.jpg")
+                                await player.send(embed = embed)
+                            else:
+                                embed = discord.Embed(title = "You are just a normal innocent villager who might get accused for crimes you didn't commit ¯\_(ツ)_/¯ ", colour = discord.Colour.dark_gold())
+                                embed.set_image(url = "https://www.lifewire.com/thmb/0V5cpFjHpDgs5-c3TLP_V29SNL4=/854x480/filters:fill(auto,1)/uFiT1UL-56a61d203df78cf7728b6ae2.png")
+                                await player.send( embed = embed)
+
+                        overwrites = {
+                            server.default_role: discord.PermissionOverwrite(send_messages=False),
+                            server.me: discord.PermissionOverwrite(send_messages=True),
+                            server.me: discord.PermissionOverwrite(read_messages = True),
+                            server.default_role: discord.PermissionOverwrite(read_messages = False)
+                        }
+                        self.serverStatus[server.id]["mafiaChannel"] = await ctx.guild.create_text_channel("mafia", overwrites = overwrites)
+
+                        for player in self.mafiaPlayers[server.id].keys():
+                            try:
+                                await player.edit(mute = False)
+                            except discord.HTTPException:
+                                print("duh")
+                        
+                        
+                    except discord.Forbidden:
+
+                        print("Forbidden error. Resetting...")
+                        self.serverStatus[server.id]["ready"] = False
+                        self.serverStatus[server.id]["setting"] = False
+                        embed = discord.Embed(title = "Error. Missing required permissions. Please check all of my required permissions with m.perms and try again.", colour = discord.Colour.red())
+
+                        await channel.send(embed = embed)
+                    else:
+                        self.serverStatus[server.id]["ready"] = True
+                        self.serverStatus[server.id]["setting"] = False
+                        embed = discord.Embed(title = "Everything's ready! Everyone feel free to join a voice chat and type m.start to start the game!", description = "Make sure you understand how the game works! (Info can be found with m.game)", colour = discord.Colour.green())
+                        embed.set_thumbnail(url = "https://pbs.twimg.com/media/DWVbyz5WsAA93-y.png")
+                        await channel.send(embed = embed)
+
+
     
-    async def vote(self, party, channel, voteTime, mayor, mRevealed):
-        groupSize = len(party.keys())
-        minVote = 2*groupSize/3
-        if minVote < 2:
-            minVote = 2
-        alivePeople = []
-        
-       #objects
-        targets = {}
-        #messages
-        alreadyVoted = []
-        for player, data in party.items():
-            if data.alive == True:
-                targets[player] = {}
-                alivePeople.append(player)
-        for item in targets:
-            targetE = discord.Embed(colour = discord.Colour.purple())
-            targetE.add_field(name = item.name, value = "React to this message to vote for me!")
-            targetE.set_thumbnail(url = item.avatar_url)
-            voteMsg = await channel.send(embed = targetE)
-            await voteMsg.add_reaction('\U0001F44D')
-            targets[item]["message"] = voteMsg
-            targets[item]["count"] = 0
-        
-        await asyncio.sleep(voteTime)
-
-        bigVote = 0
-        currentTarget = None
-
-        for person in targets.keys():
-            
-            msg = targets[person]["message"]
-            cache_msg = await channel.fetch_message(msg.id)
-            for reaction in cache_msg.reactions:
-                async for user in reaction.users():
-
-                    if not user.name.lower() in alreadyVoted and user in alivePeople:
-                        if mRevealed and mayor != None and mayor.name.lower() == user.name.lower():
-                            targets[person]["count"]+=2
-                        else:
-                            targets[person]["count"] += 1
-                        alreadyVoted.append(user.name.lower())
-            
-            if targets[person]["count"] > bigVote:
-                bigVote = targets[person]["count"]
-                currentTarget = person
-            elif targets[person]["count"] == bigVote:
-                currentTarget = None
-        totalVotes = discord.Embed(title = "Final tally.", colour = discord.Colour.orange())
-        for item in targets.keys():
-            totalVotes.add_field(name = item.name, value = targets[item]["count"])
-        await channel.send(embed = totalVotes)
-        if bigVote < minVote:
-            currentTarget = None
-        if currentTarget != None:
-            await channel.send("The town decided to lynch {}".format(currentTarget.name))
-        return currentTarget
 
         
         
@@ -645,23 +482,38 @@ class mafia(commands.Cog):
             elif self.serverStatus[server.id]["gameOn"] == True:
                 channel = ctx.channel
                 await channel.send(embed = self.makeEmbed("There is already a game going on!"))
+            elif self.serverStatus[server.id]["setting"] == True:
+                await ctx.channel.send(embed= self.makeEmbed("You got a game setting up right now. Hold on."))
             elif not ctx.message.author in self.mafiaPlayers[server.id].keys():
                 channel = ctx.channel
                 self.checkServer(server)
                 await channel.send(embed = self.makeEmbed("Boi, you're not in the party."))
             else:
-                
-                print("A game has started on {}".format(server.name))
+                memberList = list(self.mafiaPlayers[server.id].keys())
+                if memberList[0] != ctx.author:
+                    await channel.send("Boi, you ain't the party leader. The party leader is {}".format(memberList[0].name))
+                    return
+
                 try:
+                    mFunctions = turn.Turns(self.bot)
+
+                    self.serverStatus[server.id]["gameOn"] = True
                     embed = discord.Embed(title = "A game has started on {}.".format(server.name), description = "Group size: {}".format(len(currentP.keys())), colour = discord.Colour.dark_green())
                     embed.add_field(name = "Server id: ", value = "{}".format(server.id), inline = False)
                     embed.add_field(name = "Mode: ", value = self.getMode(server.id))
                     embed.set_thumbnail(url = server.icon_url)
                     await supportChannel.send(embed = embed)
-                    await channel.send(embed = self.makeEmbed("Everyone please navigate to the mafia text channel!"))
+                    embed = self.makeEmbed("Everyone please navigate to the mafia text channel!")
+                    embed.set_image(url = "https://cdn.aarp.net/content/dam/aarp/money/budgeting_savings/2016/06/1140-navigating-medicare-mistakes.imgcache.revdd9dcfe7710d97681da985118546c1a9.jpg")
+                    await channel.send(embed = embed)
+                    
                     channel = self.serverStatus[server.id]["mafiaChannel"]
+                    overwrite = discord.PermissionOverwrite(send_messages = False, read_messages = True)
+
+                    for player in currentP.keys():
+                        await channel.set_permissions(player, overwrite=overwrite)
                     pastHeal = None
-                    self.serverStatus[server.id]["gameOn"] = True
+                    
                     for player in currentP.keys():
                         await channel.send(player.mention)
 
@@ -669,6 +521,7 @@ class mafia(commands.Cog):
                     intro = discord.Embed(title = "Welcome to Mafia!", description = "If you haven't read the rules yet, please type m.game to view them in your dm!", colour = discord.Colour.dark_purple())
                     intro.add_field(name = "Important!", value = "Please do not type in this chat unless instructed to do so. Admins please don't abuse your godly powers and talk when other people can't. Thank you.")
                     intro.add_field(name = "To those who are dead: ", value = "Please do not talk. I know it's hard to grasp but dead people can't talk.")
+                    intro.add_field(name = "Some important rules: ", value = "Screen shots are not permitted and would only ruin the game. However you CAN claim roles to either coordinate among yourselves or trick other people. Just NO SCREENSHOTS.")
                     intro.add_field(name = "Some useful commands: ", value = "m.stop, m.reset, m.help.")
                     intro.set_footer(text = "Note: Parts of the game can be customized with m.custom *setting* *time*! To view current settings use m.settings.")
                     intro.set_image(url = "https://pre00.deviantart.net/5183/th/pre/i/2018/011/f/5/league_of_legends___mafia_miss_fortune_by_snatti89-dbznniv.jpg")
@@ -688,24 +541,38 @@ class mafia(commands.Cog):
                     if mafiaCount > 1:
                         embed = discord.Embed(title = "Here are the mafias in this game:", colour = discord.Colour.dark_gold())
                         for item in mafiaList:
-                            embed.add_field(name = "{}".format(item.name), value = "Role: {}".format(self.getRole(currentP, item.name.lower())), inline = False)
+                            embed.add_field(name = "{}".format(item.name), value = "Role: {}".format(turn.getRole(currentP, item.name.lower())), inline = False)
                         embed.set_footer(text = "Cooporate with your fellow mafias through dm to make strategies!")
                         for item in mafiaList:
                             await item.send(embed = embed)
+                        
                         await asyncio.sleep(4)
-                    origFramer = self.findPlayerWithRole(currentP, "framer")
+                    exePlayer = mFunctions.findPlayerWithRole(currentP, "executioner")
+                    exeTarget = None
+                    if  exePlayer != None:
+                        exeTarget = None
+                        while True:
+                            exeTarget = random.choice(list(currentP.keys()))
+                            if mFunctions.getRole(currentP, exeTarget.name.lower()) != "mafia" and mFunctions.getRole(currentP, exeTarget.name.lower()) != "framer" and exeTarget.name.lower() != exePlayer.name.lower():
+                                exeEmbed = discord.Embed(title = "Alright executioner. Your target is {}. Convince the town to lynch {} and you win. Ezpz.".format(exeTarget.name, exeTarget.name), description = "If your target is killed any other way you will become a Jester.", colour = discord.Colour.light_grey())
+                                exeEmbed.set_thumbnail(url = exeTarget.avatar_url)
+
+                                await exePlayer.send(embed = exeEmbed)
+                                break 
+                    origFramer = mFunctions.findPlayerWithRole(currentP, "framer")
                     revealed = False
                     mayorShown = False
+                    distractorCooldown = False
                     #big boi loop for game
                     while True:
                         if self.serverStatus[server.id]['commandStop'] == True:
                             await channel.send(embed = self.makeEmbed("Due to a request, I will end this game now."))
                             print("Requested stop on {}".format(server.name))
-                            await supportChannel.send(embed = discord.Embed(title = "A game has stopped on {}".format(server.name), description = "{}".format(server.id), colour = discord.Colour.dark_magenta()))
+                            #await supportChannel.send(embed = discord.Embed(title = "A game has stopped on {}".format(server.name), description = "{}".format(server.id), colour = discord.Colour.dark_magenta()))
                             await asyncio.sleep(5)
                             await channel.delete()
                             break
-
+                        
                         serverSettings = self.openJson("servers.json")
                         dmTime = serverSettings[str(server.id)]["dmTime"]
                         voteTime = serverSettings[str(server.id)]["voteTime"]
@@ -716,10 +583,15 @@ class mafia(commands.Cog):
                         detAlive = False
                         deadGuy = None
                         vgTarget = None
+                        distractorPlayer = None
+                        distractorAlive = False
                         temp = [] # names
                         tempDead = [] # names
                         healVictim = None
                         victim = None
+                        distractedP = None
+                        lastDistract = None
+                        
                         for player, data in currentP.items():
                             if (data.alive == True):
                                 temp.append(player.name.lower())
@@ -738,7 +610,7 @@ class mafia(commands.Cog):
                         await channel.send(embed = deadEmbed)
                         everyone_perms = discord.PermissionOverwrite(send_messages=False)
                         my_perms = discord.PermissionOverwrite(send_messages=True)
-                        await self.muteAll(currentP)
+                        await mFunctions.muteAll(currentP)
                         
                         await asyncio.sleep(2)
                         embed = discord.Embed(title = "It is now night time, time to go to sleep...", description = "Don't panick, I muted all of you", colour = discord.Colour.blue())
@@ -746,39 +618,67 @@ class mafia(commands.Cog):
                         await channel.send(embed = embed)
                         
                         await asyncio.sleep(3)
+                        #distractor turn
+                        distractorAlive = False
+                        for player, data in currentP.items():
+                            if(data.roleName == 'distractor') and data.alive == True:
+                                distractorPlayer = player
+                                distractorAlive = True
+
+                        if distractorAlive and not distractorCooldown:
+                            distractedP = await mFunctions.distractorTurn(distractorPlayer, temp, dmTime, lastDistract)
+                            lastDistract = distractedP
+                            distractorCooldown = True
+                        
+                        else:
+                            distractorCooldown = False
                         await channel.send(embed = self.makeEmbed("Mafia(s) please check your dm."))
 
 
                         #Mafia turn
-                        framer = self.findPlayerWithRole(currentP, "framer")
+                        framer = mFunctions.findPlayerWithRole(currentP, "framer")
+                        
                         mafiaNum = 0
                         framerCount = 0
                         for player, data in currentP.items():
                             if (data.roleName == "mafia" and data.alive == True):
                                 mafiaNum+=1
                             elif data.roleName == "framer" and data.alive == True:
+
                                 framerCount +=1
 
                         if mafiaNum == 0 and framerCount >0:
-                            await self.findPlayerWithRole(currentP, "framer").send("Since there are no more mafias, you are now a mafia.")
-                            currentP[self.findPlayerWithRole(currentP, "framer")].roleName = "mafia"
+                            await mFunctions.findPlayerWithRole(currentP, "framer").send("Since there are no more mafias, you are now a mafia.")
+                            currentP[mFunctions.findPlayerWithRole(currentP, "framer")].roleName = "mafia"
                             framer = None
                                     
                         
                         mafiaNames = []
                         mafias = []
                         mafiaTargets = []
+                        
                         for player, data in currentP.items():
+                            
                             if ((data.roleName == "mafia")and data.alive == True):
-                                mafiaNames.append(player.name.lower())
-                                mafias.append(player)
+                                if player.name.lower() == distractedP:
+                                    await player.send("Sorry. You got distracted tonight...")
+                                else:
+                                    mafiaNames.append(player.name.lower())
+                                    mafias.append(player)
                             else:
                                 if (data.roleName != "framer" and data.alive == True):
                                     mafiaTargets.append(player.name.lower())
-                        victim = await self.mafiaturn(currentP, mafiaTargets, dmTime, mafiaNames, mafias)
+                        
+                        victim = await mFunctions.mafiaturn(currentP, mafiaTargets, dmTime, mafiaNames, mafias)
                         framerVictim = None
-                        if framer != None:
-                            framerVictim = await self.framerTurn(currentP, framer, dmTime)
+
+                        
+
+                        if framer != None and mFunctions.isAlive(currentP, framer.name.lower()) == True:
+                            if distractedP != None and framer.name.lower() == distractedP:
+                                await framer.send("Sorry. You got distracted tonight...")
+                            else:
+                                framerVictim = await mFunctions.framerTurn(currentP, framer, dmTime)
                         
 
                         
@@ -791,9 +691,11 @@ class mafia(commands.Cog):
                                 doctorAlive = True
 
                         # Only if doc is alive
-                        if doctorAlive == True:
+                        if distractedP != None and doctorUser.name.lower() == distractedP:
+                            await doctorUser.send("Sorry. You got distracted tonight...")
+                        elif doctorAlive == True:
                             await channel.send("Doctor please check your DM.")
-                            healVictim = await self.doctorTurn(doctorUser, temp, dmTime, pastHeal)
+                            healVictim = await mFunctions.doctorTurn(doctorUser, temp, dmTime, pastHeal)
                             pastHeal = healVictim
                             
                         #check if victim is saved
@@ -817,14 +719,23 @@ class mafia(commands.Cog):
                                         embed = discord.Embed(title = "Sorry. The mafia killed you :(", colour = discord.Colour.dark_red())
                                         await vigilanteUser.send(embed = embed)
                         if vigilanteAlive == True:
-                            vgTarget = await self.vigTurn(vigilanteUser, temp, dmTime)
+                            if vigilanteUser.name.lower() == distractedP:
+                                await vigilanteUser.send("Sorry. You got distracted tonight...")
+                            else:
+                                vgTarget = await mFunctions.vigTurn(vigilanteUser, temp, dmTime)
                             
                         
                         #mayor turn
-                        mayor = self.findPlayerWithRole(currentP, "mayor")
+                        mayor = mFunctions.findPlayerWithRole(currentP, "mayor")
                         
                         if mayor != None and revealed == False:
-                            revealed = await self.mayorTurn(mayor, dmTime)
+                            if distractedP != None and mayor.name.lower() == distractedP:
+                                await mayor.send("Sorry. You got distracted tonight...")
+                            else:
+                                try:
+                                    revealed = await mFunctions.mayorTurn(mayor, dmTime)
+                                except asyncio.TimeoutError:
+                                    await mayor.send("You ran out of time.")
                         #Detective turn
                         
                         for player, data in currentP.items():
@@ -833,16 +744,21 @@ class mafia(commands.Cog):
                                 detAlive = True
                         
                         # only if det is alive
+
                         if detAlive == True:
                             await channel.send(embed = self.makeEmbed("Detective please check your DM"))
-                            await self.detTurn(detUser, temp, dmTime, mafiaList, framerVictim, framer)
+                            if distractedP != None and detUser.name.lower() == distractedP:
+                                await detUser.send("Sorry. You got distracted tonight...")
+                            else:
+                                
+                                await mFunctions.detTurn(detUser, temp, dmTime, mafiaList, framerVictim, framer)
 
 
                         
 
                         #Storytime
                         await channel.send(embed = self.makeEmbed("Alright everybody get your ass back here. It's storytime."))
-                        await self.muteDead(currentP)
+                        await mFunctions.muteDead(currentP)
 
                         await asyncio.sleep(3)
                         if saved == None:
@@ -860,9 +776,12 @@ class mafia(commands.Cog):
                                 storyEmbed.set_image(url = "https://i.ytimg.com/vi/j_nV2jcTFvA/hqdefault.jpg")
                                 for player, data in currentP.items():
                                     if player.name.lower() == victim:
+                                        storyEmbed.set_thumbnail(url = player.avatar_url)
 
                                         storyEmbed.add_field(name = "{}'s role is:".format(player.name), value = "{}".format(data.roleName))
-                                await self.killPlayer(currentP, victim)
+                                await mFunctions.killPlayer(currentP, victim)
+                                
+
 
                                 temp.remove(victim)
                             
@@ -873,7 +792,7 @@ class mafia(commands.Cog):
                         await asyncio.sleep(5)
 
                         if revealed and mayorShown ==False:
-                            mayorEmbed = discord.Embed(title = "The mayor has shown himself/herself to be {}!".format(self.findPlayerWithRole(currentP, "mayor")), description = "Now the mayor's vote counts twice!", colour = discord.Colour.green())
+                            mayorEmbed = discord.Embed(title = "The mayor has shown himself/herself to be {}!".format(mFunctions.findPlayerWithRole(currentP, "mayor")), description = "Now the mayor's vote counts twice!", colour = discord.Colour.green())
                             mayorEmbed.set_image(url = "https://upload.wikimedia.org/wikipedia/en/a/a3/Adam_West_on_Family_Guy.png")
                             await channel.send(embed = mayorEmbed)
                             mayorShown = True
@@ -889,9 +808,9 @@ class mafia(commands.Cog):
                                 embed = discord.Embed(title = "Wait, what's this?", description = "The vigilante shot a mafia!!", colour = discord.Colour.green())
                                 embed.add_field(name = "The mafia shot was...", value = "{}!".format(vgTarget))
                                 embed.set_image(url = "https://vignette.wikia.nocookie.net/michaelbaybatman/images/e/ea/Bac-gotham-rooftop.jpg/revision/latest?cb=20140223174240")
-                                vgTargetObj = self.getPlayer(currentP, vgTarget)
+                                vgTargetObj = mFunctions.getPlayer(currentP, vgTarget)
                                 embed.set_footer(text = "{} was a {}".format(vgTarget, currentP[vgTargetObj].roleName))
-                                await self.killPlayer(currentP, vgTarget)
+                                await mFunctions.killPlayer(currentP, vgTarget)
                                 temp.remove(vgTarget)
                                 await channel.send(embed = embed)
                             #if vg shot an innocent boi
@@ -899,22 +818,22 @@ class mafia(commands.Cog):
                                 embed = discord.Embed(title = "Wait, what's this?", description = "The vigilante shot the innocent {}! The vigilante has commited suicide out of guilt!".format(vgTarget), colour = discord.Colour.red())
                                 
                                 embed.set_image(url = "https://res.cloudinary.com/teepublic/image/private/s--N6Q7m5Pj--/t_Preview/b_rgb:191919,c_limit,f_jpg,h_630,q_90,w_630/v1493744453/production/designs/1556060_1.jpg")
-                                vgTargetObj = self.getPlayer(currentP, vgTarget)
+                                vgTargetObj = mFunctions.getPlayer(currentP, vgTarget)
                                 embed.set_footer(text =  "{} was the vigilante and {}'s role was {}!".format(vigilanteUser.name, vgTarget, currentP[vgTargetObj].roleName))
-                                await self.killPlayer(currentP, vgTarget)
-                                await self.killPlayer(currentP, vigilanteUser.name.lower())
+                                await mFunctions.killPlayer(currentP, vgTarget)
+                                await mFunctions.killPlayer(currentP, vigilanteUser.name.lower())
                                 await channel.send(embed = embed)
                                 
                             #if vg shot the mafia's victim            
                             elif vgTarget == victim.lower():
                                 embed = discord.Embed(title = "Wait, what's this?", description = "The vigilante also shot the mafia's victim! The vigilante has commited suicide out of shame!", colour = discord.Colour.orange())
                                 embed.set_image(url = "https://i.ytimg.com/vi/lhckuhUxcgA/hqdefault.jpg")
-                                vgTargetObj = self.getPlayer(currentP, vgTarget)
+                                vgTargetObj = mFunctions.getPlayer(currentP, vgTarget)
                                 embed.set_footer(text = "{} was the vigilante and {} was a {}!".format(vigilanteUser.name,  vgTarget, currentP[vgTargetObj].roleName))
                                 
-                                await self.killPlayer(currentP, vigilanteUser.name.lower())
+                                await mFunctions.killPlayer(currentP, vigilanteUser.name.lower())
                                 if saved == True:
-                                    await self.killPlayer(currentP, vgTarget)
+                                    await mFunctions.killPlayer(currentP, vgTarget)
                                 await channel.send(embed = embed)                
 
                             
@@ -923,53 +842,71 @@ class mafia(commands.Cog):
                             
                         check = self.checkWin(mafiaCount, server.id, currentP)
 
-                        await asyncio.sleep(5)
+                        await asyncio.sleep(2)
                         if check == "mafia":
-                                await self.unMuteAll(currentP)
+                                await mFunctions.unMuteAll(currentP)
                                 embed = discord.Embed(title = "The mafia(s) win!", colour = discord.Colour.red())
-                                embed.set_image(url = "https://i0.wp.com/static.lolwallpapers.net/2015/11/Braum-Safe-Breaker-Fan-Art-Skin-By-Karamlik.png")
-                                self.updateWin(currentP, server.id, check)
+                                embed.set_image(url = "https://vignette.wikia.nocookie.net/leagueoflegends/images/8/89/Graves_MafiaSkin_Ch.jpg/revision/latest/zoom-crop/width/480/height/480?cb=20120509133401")
+                                await self.updateWin(currentP, server.id, check)
                                 break
                         elif check == "villager":
-                            await self.unMuteAll(currentP)
+                            await mFunctions.unMuteAll(currentP)
                             embed = discord.Embed(title = "The villagers win!", colour = discord.Colour.green())
-                            embed.set_image(url = "https://www.landofthebrave.info/images/pilgrims--native-indians-massachusetts.jpg")
-                            self.updateWin(currentP, server.id, check)
+                            
+                            embed.set_image(url = "https://www.fanbyte.com/wp-content/uploads/2018/12/Villager.jpg")
+                            await self.updateWin(currentP, server.id, check)
                             break
 
                         elif check == "none": # lynch
+
+                            #checks executioner
+                            if exePlayer != None:
+                                if mFunctions.isAlive(currentP, exeTarget.name.lower()) == False and mFunctions.isAlive(currentP, exePlayer.name.lower()):
+                                    embed = discord.Embed(title = "You are now the Jester. Your win condition is to get the town to lynch you.", colour = discord.Colour.teal())
+                                    embed.set_image(url = "https://runes.lol/image/generated/championtiles/Shaco.jpg")
+                                    await exePlayer.send( embed = embed)
+                                    currentP[exePlayer].roleName = "jester"
                             tempC = []
                             for player, data in currentP.items():
                                 if data.alive == True:
                                     tempC.append(player.name.lower())
-                            embed = discord.Embed(title = "Now I'll give you guys {} seconds to talk. ".format(talkTime), colour = discord.Colour.magenta())
+                            embed = discord.Embed(title = "Now I'll give you guys {} seconds to talk. ".format(talkTime), description = "Want to claim a role? Accuse someone? Confess? Do that now!", colour = discord.Colour.magenta())
+                            for player, data in currentP.items():
+                                if data.alive == True:
+                                    embed.add_field(name = player.name, value = "Alive!")
+                
                             embed.set_image(url = "https://blog.oup.com/wp-content/uploads/2016/11/Witchcraft_at_Salem_Village2.jpg")
                             await channel.send(embed = embed)
                             #Gives permission to type in chat
-                            overwrite = discord.PermissionOverwrite()
-                           
+                            overwrite = discord.PermissionOverwrite(send_messages = True, read_messages = True)
+                            overwriteMute = discord.PermissionOverwrite(send_messages = False, read_messages = True)
+
+
                             for player, data in currentP.items():
                                 if data.alive == True:
-                                    await channel.set_permissions(player, send_messages=True)
+                                    await channel.set_permissions(player, overwrite = overwrite)
                      
                                 else:
-                                    await channel.set_permissions(player, send_messages=False)
+                                    await channel.set_permissions(player, overwrite = overwriteMute)
                             await asyncio.sleep(talkTime)
-                            
-                            embed = discord.Embed(title = "Alright! It's time to vote! Vote for a person by reacting to the message associated with your target. (A person must have a min of {} votes to be lynched)".format(int(2*len(currentP.keys())/3)), description = "Note: If you try to be sneaky and vote more than once your vote will only count once to the first message the bot reads.", colour = discord.Colour.green())
+                            minVote = int(len(temp)/1.5)
+
+                            if minVote < 2:
+                                minVote = 2
+                            embed = discord.Embed(title = "Alright! It's time to vote! Vote for a person by reacting to the message associated with your target. (A person must have a min of {} votes to be lynched)".format(str(minVote)), description = "Note: If you try to be sneaky and vote more than once your vote will only count once to the first message the bot reads.", colour = discord.Colour.green())
                             
                             embed.set_footer(text = "You have {} seconds to vote.".format(voteTime))
 
 
                             await channel.send(embed = embed)
-                            lynchPerson = await self.vote(currentP, channel, voteTime, mayor, revealed)
+                            lynchPerson = await mFunctions.vote(currentP, channel, voteTime, mayor, revealed, minVote)
 
-                            asyncio.sleep(2)
+                            await asyncio.sleep(3)
                             if lynchPerson != None:
                                 embed = discord.Embed(title = "{} has been hanged by the village. Press f to pay respect.".format(lynchPerson.name), colour = discord.Colour.red())
                                 embed.set_image(url = "https://cdn.shopify.com/s/files/1/0895/0864/products/42-47714084_1024x1024.jpeg?v=1451772538")
                                 await channel.send(embed = embed)
-                                await asyncio.sleep(3)
+                                await asyncio.sleep(2)
                                 for player, data in currentP.items():
                                     if (player.name.lower() == lynchPerson.name.lower()):
                                         data.alive = False
@@ -982,49 +919,62 @@ class mafia(commands.Cog):
                                         break
                             else:
                                 await channel.send(embed = self.makeEmbed("No one was hanged."))
-                            asyncio.sleep(1)
                         
                                 
 
                               
                                 
                             for player, data in currentP.items():
-                                await channel.set_permissions(player, send_messages=False)
+                                await channel.set_permissions(player, overwrite = overwriteMute)
                             check = self.checkWin(mafiaCount, server.id, currentP)
                             
                             jesterWins = False
+                            exeWins = False
                             if lynchPerson != None:
                                 for player, data in currentP.items():
                                     if player.name.lower() == lynchPerson.name.lower() and data.roleName == "jester":
                                         jesterWins = True
+                                    elif exeTarget != None and player.name.lower() == lynchPerson.name.lower() and player.name.lower() == exeTarget.name.lower() and mFunctions.isAlive(currentP, exePlayer.name.lower()):
+                                        exeWins = True
 
                             #check conditions 
                             #check returns string mafia or villager
                             if jesterWins == True:
-                                await self.unMuteAll(currentP)
+                                await mFunctions.unMuteAll(currentP)
                                 embed = discord.Embed(title = "Uh oh! The Jester wins!", colour = discord.Colour.purple())
                                 embed.set_thumbnail(url = "https://runes.lol/image/generated/championtiles/Shaco.jpg")
                                 embed.set_footer(text = "hehehehe....")
-                                self.updateWin(currentP, server.id, "jester")
+                                await self.updateWin(currentP, server.id, "jester")
+                                break
+                            elif exeWins == True:
+                                embed = discord.Embed(title = "Wait a minute...", description = "You've all been fooled!", colour = discord.Colour.dark_grey())
+                                embed.add_field(name = "{} was the executioner's target!".format(exeTarget.name), value = "{} was the executioner!".format(exePlayer.name))
+                                embed.set_image(url = "https://afinde-production.s3.amazonaws.com/uploads/3ee849bd-8cfc-40b3-98ba-2e39b2ec8c2f.png")
+                                await channel.send(embed = embed)
+                                await mFunctions.unMuteAll(currentP)
+                                embed = discord.Embed(title = "The Executioner wins!", colour = discord.Colour.dark_grey())
+                                embed.set_thumbnail(url = "")
+                                await self.updateWin(currentP, server.id, "executioner")
                                 break
                             elif check == "mafia":
-                                await self.unMuteAll(currentP)
+                                await mFunctions.unMuteAll(currentP)
                                 embed = discord.Embed(title = "The mafia(s) win!", colour = discord.Colour.red())
-                                embed.set_image(url = "https://i0.wp.com/static.lolwallpapers.net/2015/11/Braum-Safe-Breaker-Fan-Art-Skin-By-Karamlik.png")
-                                self.updateWin(currentP, server.id, check)
+                                embed.set_image(url = "https://vignette.wikia.nocookie.net/leagueoflegends/images/8/89/Graves_MafiaSkin_Ch.jpg/revision/latest/zoom-crop/width/480/height/480?cb=20120509133401")
+                                await self.updateWin(currentP, server.id, check)
                                 break
                             elif check == "villager":
-                                await self.unMuteAll(currentP)
+                                await mFunctions.unMuteAll(currentP)
                                 embed = discord.Embed(title = "The villagers win!", colour = discord.Colour.green())
-                                embed.set_image(url = "https://www.landofthebrave.info/images/pilgrims--native-indians-massachusetts.jpg")
-                                self.updateWin(currentP, server.id, check)
+                                embed.set_image(url = "https://www.fanbyte.com/wp-content/uploads/2018/12/Villager.jpg")
+                                await self.updateWin(currentP, server.id, check)
                                 break
                     #unmutes all players
-                    await self.unMuteAll(currentP)
+                    await mFunctions.unMuteAll(currentP)
 
                         #Only if the game did not end with commandStop
                     if self.serverStatus[server.id]['commandStop'] == False:
                         self.displayAllR(embed, currentP, origFramer)
+                        embed.set_footer(text = "Enjoyed the game? Support Mafiabot by upvoting me on discordbots.org so my creator would be more inspired to create new content!!", icon_url = self.bot.user.avatar_url)
                         await ctx.channel.send(embed = embed)
                         await channel.send(embed = embed)
                         await channel.send(embed = self.makeEmbed("Thank you all for playing! Deleting this channel in 10 seconds"))
@@ -1032,8 +982,10 @@ class mafia(commands.Cog):
                         await channel.delete()
                     self.serverStatus[server.id]["ready"] = False
                     self.serverStatus[server.id]["gameOn"] = False
+                    self.serverStatus[server.id]["setting"] = False
                     self.serverStatus[server.id]['commandStop'] = False  
                     self.serverStatus[server.id]["mafiaChannel"] = None
+                    
                     embed = discord.Embed(title = "A game has finished on {}.".format(server.name), description = "Group size: {}".format(len(currentP.keys())), colour = discord.Colour.dark_purple())
                     embed.add_field(name = "Server id: ", value = "{}".format(server.id))
                     embed.set_thumbnail(url = server.icon_url)
@@ -1041,13 +993,17 @@ class mafia(commands.Cog):
 
                         
                 except Exception as e:
+                    mafiaChannel = self.serverStatus[server.id]["mafiaChannel"]
+                    print("{}".format(traceback.format_exc()))
                     if isinstance(e, discord.Forbidden):
-                        await ctx.channel.send("Error. Missing permission to mute members!(Or some other permissions idk)")
+                        await ctx.channel.send("Error. Missing permissions! Check all my required permissions with m.perms.")
+
                     elif isinstance(e, discord.NotFound):
                         await ctx.channel.send( "Boi, who deleted my mafia text channel...")
+                        mafiaChannel = None
                     else:
-                        await ctx.channel.send("Error. Something weird happened. (If this keeps happening report it to the Mafia Support Server)")
-                    
+                        await ctx.channel.send("Error. Something weird happened. (If this keeps happening report it to the Mafia Support Server or use m.support to request support from the support server.)")
+                        
                     embed = discord.Embed(title = "An error has occured on {}.".format(server.name), description = "Server id: {}".format(server.id), colour = discord.Colour.red())
                     embed.add_field(name = "Error:", value = "{}".format(traceback.format_exc()))
                     
@@ -1055,16 +1011,15 @@ class mafia(commands.Cog):
                     self.serverStatus[server.id]["ready"] = False
                     self.serverStatus[server.id]["gameOn"] = False
                     self.serverStatus[server.id]["commandStop"] = False
-                    mafiaChannel = None
-                    for item in server.channels:
-                        if item.name == 'mafia':
-                            mafiaChannel = item
+                    self.serverStatus[server.id]["setting"] = False
+                    
                     try:
                         await mafiaChannel.delete() 
                     except:
                         print("duh")
                     embed = discord.Embed(title = "Resetting...", colour = discord.Colour.red())
                     await channel.send(embed = embed)
+                    
                
     
         
@@ -1079,6 +1034,8 @@ class mafia(commands.Cog):
             self.serverStatus[server.id]["gameOn"] = False
             self.serverStatus[server.id]['commandStop'] = False  
             self.serverStatus[server.id]["mafiaChannel"] = None
+            self.serverStatus[server.id]["setting"] = False
+            
         if not str(server.id) in sList.keys():
             
             sList[str(server.id)] = {}
@@ -1126,10 +1083,16 @@ class mafia(commands.Cog):
     def displayAllR(self, embed, mafiaList, framer):
         embed.set_image(url = "https://wallpapers.wallhaven.cc/wallpapers/full/wallhaven-323086.png")
         for player, data in mafiaList.items():
-            if framer != None and player.name.lower() == framer.name.lower():
-                embed.add_field(name = "{}".format(player.name), value = "framer", inline = True)
+            cog = self.bot.get_cog("Points")
+            title = cog.getCTitle(player.id)
+            if title == "" or title == " ":
+                nameThing = player.name
             else:
-                embed.add_field(name = "{}".format(player.name), value = "{}".format(data.roleName), inline = True)
+                nameThing = player.name + '\n"' + title+'"'
+            if framer != None and player.name.lower() == framer.name.lower():
+                embed.add_field(name = nameThing, value = "framer", inline = True)
+            else:
+                embed.add_field(name =nameThing, value = "{}".format(data.roleName), inline = True)
     def setRoles(self, ctx, group, role):
         role = random.choice(group)
         group.remove(role)
@@ -1145,41 +1108,50 @@ class mafia(commands.Cog):
         return embed
 
     def checkSide(self, role):
-        if role == "mafia" or "framer": #checks what side the role belongs to
+        if role == "mafia" or role == "framer": #checks what side the role belongs to
             return "mafia"
         elif role == "jester":
             return "jester"
+        elif role == "executioner":
+            return "executioner"
         else:
             return "villager"
 
-    def checkFile(self, playerID, serverID):
-        with open('players.json', 'r') as f:
-            players = json.load(f)
-        playerStr = str(playerID)
-        serverStr = str(serverID)
-        if not serverStr in players:
-            players[serverStr] = {}
-        if not playerStr in players[serverStr].keys():
-            players[serverStr][playerStr] = {}
-            players[serverStr][playerStr]["Wins"] = 0
-            players[serverStr][playerStr]["Games"] = 0
-        with open('players.json', 'w') as f:
-            json.dump(players, f)
-    
-    def updateWin(self, mafiaList, serverID, winner):
-        with open('players.json', 'r') as f:
-            players = json.load(f)
+    def checkFile(self, playerID):
+
+        for user in self.userList:
+            if user.id == playerID:
+                return
+        print("hi")
+        newPlayer = userObj.MafiaUser(playerID)
+        self.editFile(newPlayer)
+        self.userList.append(newPlayer)
+
+        
+    def findUser(self, userID):
+        for player in self.userList:
+            if player.id == userID:
+                return player
+        return None
+    async def updateWin(self, mafiaList, serverID, winner):
         #finds players with the winning role (winner is a string) and adds one point to their record
-
+        
         for player, data in mafiaList.items():
-            self.checkFile(player.id, serverID)
+            self.checkFile(player.id)
             side = self.checkSide(data.roleName)
+            tempUser = self.findUser(player.id)
             if side == winner:
-                players[str(serverID)][str(player.id)]["Wins"] += 1
-            players[str(serverID)][str(player.id)]["Games"] += 1
-
-        with open('players.json', 'w') as f:
-            json.dump(players, f)                
+                
+                tempUser.wins += 1
+                reward = random.randint(5, 11)
+                tempUser.points += reward
+                embed = discord.Embed(title = "You have received {} Mafia points!:moneybag:".format(str(reward)), description = "Spend mafia points at the store! Check your account with m.record @user!", colour = discord.Colour.green())
+                embed.set_image(url = "https://images2.minutemediacdn.com/image/upload/c_fill,g_auto,h_1248,w_2220/f_auto,q_auto,w_1100/v1555271785/shape/mentalfloss/500940-Amazon_0.png")
+                await player.send(embed = embed)
+            tempUser.games += 1
+            self.editFile(tempUser) 
+  
+                  
     def getMode(self, serverID):
         servers = self.openJson("servers.json")
         return servers[str(serverID)]["game mode"]
@@ -1192,5 +1164,15 @@ class mafia(commands.Cog):
         with open(file, 'w') as f:
             json.dump(content, f)
     
+    def editFile(self, userObj):
+        path = "/home/ubuntu/users"
+        completeName = os.path.join(path, str(userObj.id)+".txt")
+        n = open(completeName, "w")
+        data_str = str(userObj.id) + "\n" + str(userObj.wins) + "\n" + str(userObj.games) + "\n" + str(userObj.points) + "\n" 
+        for item in userObj.titles:
+            data_str += item+" "
+        data_str += "\n"+userObj.currentTitle + " "
+        n.write(data_str)
+        n.close()
 def setup(bot):
     bot.add_cog(mafia(bot))
