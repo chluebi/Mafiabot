@@ -18,8 +18,11 @@ class Slot(commands.Cog):
             bet = 10
         elif len(args) == 1:
             bet = int(args[0])
-        if bet < 10:
+        if int(bet) < 10:
             await ctx.channel.send("Boi that's not enough. The minimum bet is 10 Mafia points. Cheapsake.")
+            return
+        if int(bet) > playerObj.points:
+            await ctx.channel.send("Boi, you don't have that much points. Nice try.")
             return
         playerObj.points -= bet
         e1 = self.showRandom("a")
@@ -28,8 +31,7 @@ class Slot(commands.Cog):
         strSum = e1 + e2 + e3
         embed = self.slotEmbed(strSum, bet)
         message = await ctx.channel.send(embed = embed)
-        x = 0
-        for _ in range(5):
+        for _ in range(3):
             await asyncio.sleep(0.5)
             e1 = self.showRandom("a")
             e2 = self.showRandom("a")
@@ -38,7 +40,7 @@ class Slot(commands.Cog):
             embed = self.slotEmbed(strSum, bet)
             await message.edit(embed =embed)
         e1 = self.showRandom("a")
-        for _ in range(5):
+        for _ in range(3):
             await asyncio.sleep(0.5)
             e2 = self.showRandom(e1)
             e3 = self.showRandom("a")
@@ -46,7 +48,7 @@ class Slot(commands.Cog):
             embed = self.slotEmbed(strSum, bet)
             await message.edit(embed =embed)
         e2 = self.showRandom(e1)
-        for _ in range(5):
+        for _ in range(3):
             await asyncio.sleep(0.5)
             e3 = self.showRandom(e2)
             strSum = e1 + e2 + e3
@@ -121,7 +123,7 @@ class Slot(commands.Cog):
     def showRandom(self, prevSelection):
         temp_choice =  random.choice(self.choices)
         while True:
-            if temp_choice != prevSelection or random.randint(0, 10) < 5:
+            if temp_choice != prevSelection or random.randint(0, 10) < 7:
                 break
             temp_choice =  random.choice(self.choices)    
 

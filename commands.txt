@@ -12,17 +12,19 @@ custom (type) (time) : Customize the settings on the server. Ex. m.custom dmTime
 support : Request assistance from the Mafiabot Support Server! The bot will invite a helper from the support server and help you with your needs! Must need perm to create invite.
 duel @user : Challenges another player to a duel. Each turn players choose their attack and determines who wins. Last man standing wins.
 slot (bet) : Plays a slot machine! Bet a certain number (default is 10 and must be at least 10). Type m.slotInfo to view more!
-combinations : Shows info about the slot!
+combo : Shows info about the slot!
 info : Reveals bot's info (like a link to the Mafiabot Support Server!)
 perms : Shows the required perms for Mafiabot to function most of the time
 patch : Shows the latest patch!
 record @user : Shows the past games played and the amount of Mafia points!
 balance : Shows the balance (duh)
+transfer @user (amount) : Transfers an certain amount of mafia points from your account to the target's account
 mini : Shows all the mini games Mafiabot can play!
 shop : Opens up Mafiabot's shop!
 buy : Buys item from the shop by selecting items associated with its number!
 titles : Shows a list of titles owned by you! (Buy titles from the shop!)
 setTitle : Equips a title you own by selecting one associated with its number!
 roles : Shows a list of roles 
+roles `role` : Show the information about a specific role
 game : Shows information about the game of Mafia!
 help : Shows help duh

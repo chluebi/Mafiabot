@@ -11,7 +11,7 @@ import MAFIA.dbl as dblthing
 bot = commands.Bot(command_prefix='m.')
 bot.remove_command('help')
 
-extensions = ['mafia', 'Points', 'duel', 'slot', 'help']
+extensions = ['mafia', 'Points', 'duel', 'slot', 'help', 'troll']
 players = {}
 boi = "boi"
 @bot.event
@@ -78,5 +78,5 @@ if __name__ == '__main__':
     with open('key.json', 'r') as f:
         keys = json.load(f)
     thing = keys['key']
+    testThing = keys['test']
     bot.run(thing)
-    #"NTU0NTI2MzI0NjQzOTg3NDc2.XR2njw.EhUrv7djZ5nOyyJypzbWiMuTrPA"

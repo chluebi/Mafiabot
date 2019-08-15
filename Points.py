@@ -70,12 +70,14 @@ class Points(commands.Cog):
             await ctx.channel.send("Boi that's not something you can buy.")
             return
         
+        
         cog = self.bot.get_cog("mafia")
         cog.checkFile(ctx.author.id)
         playerObj = cog.findUser(ctx.author.id)
 
         title = list(self.titleList.keys())[itemNumber-1]
         price = int(self.titleList[title])
+        print(playerObj.titles)
         if title in playerObj.titles:
             await ctx.channel.send("Lol don't waste your money. You already bought '{}'.".format(title))
             return
@@ -89,7 +91,7 @@ class Points(commands.Cog):
             playerObj.titles.append(title)
             cog.editFile(playerObj)
             supportChannel = self.bot.get_channel(550923896858214446)
-            #await supportChannel.send("{} bought {} on {}".format(ctx.author.name, title, ctx.guild.name))
+            ##await supportChannel.send("{} bought {} on {}".format(ctx.author.name, title, ctx.guild.name))
             return
         
         await ctx.channel.send("Lol you don't have enough mafia points.")
