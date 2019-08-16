@@ -62,6 +62,7 @@ class Turns():
                     mafiaKillVote.append(answer)
                 except asyncio.TimeoutError:
                     print('duh')
+                    await player.send("Feelsbad, you ran out of time.")
 
 
             if mafiaKillVote:
@@ -124,8 +125,10 @@ class Turns():
                     embedDet = self.makeEmbed("Sorry. That person is not the mafia. Please return to the mafia chat now.")
                     embedDet.set_thumbnail(url = "https://iconsplace.com/wp-content/uploads/_icons/ff0000/256/png/thumbs-down-icon-14-256.png")
                 await detective.send(embed = embedDet)
+                return answer.lower()
         except asyncio.TimeoutError:
             await detective.send("You ran out of time.")
+            return None
 
     async def vigTurn(self, vig, temp, dmTime):
         #await channel.send(embed = self.makeEmbed("Vigilante please check your dm."))
@@ -138,6 +141,7 @@ class Turns():
             answer = await self.dmNight(vig, dmTime, tempV, "Vigilante, who do you want to shoot? (If you shoot an innocent boi you will commit suicide)", "Enter the number associated with your target.", discord.Colour.green(), "https://pmcdeadline2.files.wordpress.com/2018/03/arrow.png?w=446&h=299&crop=1")
         except asyncio.TimeoutError:
             answer = None
+            await vig.send("Feelsbad you ran out of time.")
         return answer
                         
     async def mayorTurn(self, mayor, dmTime):
@@ -166,7 +170,7 @@ class Turns():
                     await mayor.send( embed = self.makeEmbed("Error. Idk what you typed but it's not the right input."))
                     answer = await self.bot.wait_for('message', check = mcheck, timeout = dmTime)
         except asyncio.TimeoutError:
-            reveald = revealed
+            pass
         
         return revealed
 
@@ -186,11 +190,67 @@ class Turns():
             answer = await self.dmNight(distractor, dmTime, tempD, "Distractor, who do you want to distract tonight?", "Enter the number associated with your target.(If you distract someone you have to wait one night before you can distract someone again)", discord.Colour.orange(), "https://www.dolmanlaw.com/wp-content/uploads/2017/03/The-Many-Types-of-Technology-that-can-Cause-Distracted-Driving-1.jpg")
         except asyncio.TimeoutError:
             answer = None
+            await distractor.send("Feelsbad you ran out of time.")
         return answer
+
+    async def PITurn(self, PI, currentL, currentP, dmTime, framerVictim):
+        temp = []
+        for player in currentL:
+            if player.lower() != PI.name.lower():
+                temp.append(player.lower())
+        
+        try:
+            answer1 = await self.dmNight(PI, dmTime, temp, "Alright PI, who's your first suspect?", "Enter the number associated with your target.", discord.Colour.blurple(), "https://i.pinimg.com/originals/08/64/a5/0864a55a5c3b2b8e0e2b1b8c231c93a3.jpg")
+        except asyncio.TimeoutError:
+            answer1 = None
+            await PI.send("Feelsbad you ran out of time.")
+        
+        if answer1 != None:
+            temp.remove(answer1)
+            try:
+                answer2 = await self.dmNight(PI, dmTime, temp, "Alright PI, who's your second suspect?", "Enter the number associated with your target.", discord.Colour.blurple(), "https://i.pinimg.com/originals/08/64/a5/0864a55a5c3b2b8e0e2b1b8c231c93a3.jpg")
+                if answer2 !=None:
+                    cog = self.bot.get_cog("mafia")
+                    role1 = self.getRoleWName(currentP, answer1)
+                    role2 = self.getRoleWName(currentP, answer2)
+                    side1 = cog.checkSide(role1)
+                    side2 = cog.checkSide(role2)
+                    if framerVictim == answer1:
+                        side1 = "mafia"
+                    elif framerVictim == answer2:
+                        side2 = "mafia"
+
+                    if side1 == side2:
+                        embed = discord.Embed(title = "Yes. {} and {} are both on the same side. It's up to you to figure out what side though lol.".format(answer1, answer2), colour = discord.Colour.green())
+                        embed.set_thumbnail(url = "http://www.clker.com/cliparts/P/S/9/I/l/S/234-ed-s-sd-md.png")
+                    else:
+                        embed =  discord.Embed(title = "No. {} and {} are not on the same side. Hmmmmmmmmmm.".format(answer1, answer2), colour = discord.Colour.red())
+                        embed.set_thumbnail(url = "https://iconsplace.com/wp-content/uploads/_icons/ff0000/256/png/thumbs-down-icon-14-256.png")
+                    await PI.send(embed = embed)
+                else:
+                    await PI.send("Ok wise guy.")
+            except asyncio.TimeoutError:
+                answer2 = None
+                await PI.send("Feelsbad you ran out of time.")
+            
+
+    async def spyTurn(self, spy, tempList, dmTime):
+        temp = []
+        for item in tempList:
+            if item.lower() != spy.name.lower():
+                temp.append(item.lower())
+        try:
+            answer = await self.dmNight(spy, dmTime, temp, "Alright spy, who are you spying tonight?", "Enter the number associated with your target.", discord.Colour.blurple(),  "https://cdn.vox-cdn.com/thumbor/I3GT91gn4U3jc4HmBY5LjowXzuM=/0x0:1215x717/1200x800/filters:focal(546x35:740x229)/cdn.vox-cdn.com/uploads/chorus_image/image/57172117/Evelynn_Splash_4.0.jpg")
+            await spy.send("You will be given the results after all the other roles have finished. Please navigate back to the mafia text channel and wait.")
+        except asyncio.TimeoutError:
+            answer = None
+        
+        return answer
+         
     #returns player object
     def getPlayer(self, players, person):
         for player, data in players.items():
-            if (player.name.lower() == person):
+            if (player.name.lower() == person.lower()):
                 return player
         return None
     #returns player role name
@@ -199,6 +259,10 @@ class Turns():
             if (player.name.lower() == person):
                 return data.roleName
         return None
+    def getRoleWName(self, players, person):
+        for player, data in players.items():
+            if person.lower() == player.name.lower():
+                return data.roleName
     def findPlayerWithRole(self, players, role):
         for player, data in players.items():
             if (data.roleName == role):
@@ -213,34 +277,34 @@ class Turns():
         try:
             await target.edit(mute = True)
         except discord.HTTPException:
-            print("duh")
+            pass
 
     async def muteAll(self, party):
         for player in party.keys():
             try:
                 await player.edit(mute = True)
             except discord.HTTPException:
-                print("duh")
+                pass
     async def unMuteAll(self, party):
         for player in party.keys():
             try:
                 await player.edit(mute = False)
             except discord.HTTPException:
-                print("duh")
+                pass
     async def muteDead(self, party):
         for player, data in party.items():
             if data.alive == False:
                 try:
                     await player.edit(mute = True)
                 except discord.HTTPException:
-                    print("duh")  
+                    pass  
             
             elif data.alive == True:
                 try:
                     await player.edit(mute = False)
                  
                 except discord.HTTPException:
-                    print("duh") 
+                    pass 
     
     def isAlive(self, party, person):
         for player, data in party.items():
@@ -248,7 +312,6 @@ class Turns():
                 return data.alive
 
     async def vote(self, party, channel, voteTime, mayor, mRevealed, minVote):
-        groupSize = len(party.keys())
 
         alivePeople = []
         
@@ -283,7 +346,7 @@ class Turns():
 
                     if not user.name.lower() in alreadyVoted and user in alivePeople:
                         if mRevealed and mayor != None and mayor.name.lower() == user.name.lower():
-                            targets[person]["count"]+=2
+                            targets[person]["count"] += 2
                         else:
                             targets[person]["count"] += 1
                         alreadyVoted.append(user.name.lower())

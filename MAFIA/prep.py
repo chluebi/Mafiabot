@@ -31,21 +31,21 @@ class prepare:
     def assignRoles(self):
 
         unassignedPlayers = list(self.mafiaPlayers.keys())
+        size = len(unassignedPlayers)
         random.shuffle(unassignedPlayers)
-        extraRoles = ["executioner", "vigilante", "framer", "mayor","distractor"]
-        count = 0
-        mafiaCount = 0
-        for _ in range(len(unassignedPlayers)):
-            if count == 3:
-                mafiaCount += 1
-                count = 0
-            else:
-                count += 1
-        
-        # Maybe add calculation to determine (1 mafia per 3 villagers etc)
-        for _ in range(mafiaCount):
+        extraRoles = ["executioner", "mayor", "vigilante", "distractor", "spy", "PI",]
+        if size>5:
+            extraRoles.append("framer")
+            extraRoles.append("dictator")
+        if size > 6:
+            extraRoles.append("baiter")
+            extraRoles.append("bomber")
             self.setRole("mafia", unassignedPlayers)
 
+
+        self.setRole("godfather", unassignedPlayers)
+
+        
         doctorCount = 1 # see above
         for _ in range(doctorCount):
             self.setRole("doctor", unassignedPlayers)
@@ -55,8 +55,8 @@ class prepare:
             self.setRole("detective", unassignedPlayers)
         if (self.mode == "crazy"):
             count = len(unassignedPlayers)
-            print(count)
-            while (count > 1 and len(extraRoles) != 0):
+            
+            while (count > 0 and len(extraRoles) != 0):
                 role = random.choice(extraRoles)
                 self.setRole(role, unassignedPlayers)
                 print(role)
