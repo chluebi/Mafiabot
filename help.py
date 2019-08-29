@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands
+from discord import Webhook, AsyncWebhookAdapter
+import aiohttp
 import asyncio
+import json
 import dbl
 import MAFIA.turns as turn
 import role as roleObj
@@ -22,13 +25,16 @@ class helpC(commands.Cog):
             for line in f:
                 (name, ability, goal, side, img_url) = line.split(" : ")
                 self.roleList.append(roleObj.Role(name, ability, goal, side, "crazy", img_url))
-        with open('commands.txt') as f:
+        
+        with open("chaosRole.txt") as f:
             for line in f:
-                (key, val) = line.split(" : ")
-                self.commandsDict[key] = val
-    commandGames = ["join", "leave", "setup", "start", "stop", "reset", "party", "clear", "custom", "gamemode", "duel"]
-    commandOther = ["info", "perms", "updates", "mini"]
-    testUsers = []
+                (name, ability, goal, side, img_url) = line.split(" : ")
+                self.roleList.append(roleObj.Role(name, ability, goal, side, "chaos", img_url))
+
+        with open('commands.json') as f:
+            self.commandDict = json.load(f)
+
+                
     @commands.command(pass_context = True)
     async def getVoters(self, ctx):
         temp = []
@@ -37,12 +43,12 @@ class helpC(commands.Cog):
         await ctx.message.channel.send(temp)
     @commands.command(name = "patch", aliases = ['updates', 'update', 'patches', "changes"])
     async def patch(self, ctx):
-        update = discord.Embed(title = "Latest Mafia Updates: Bunch of new roles!", description = "Patch 1.9", colour = discord.Colour.blue())
-        update.add_field(name = "New role: Godfather", value = "You decide who to kill. If you don't have a mafia you do it yourself.")
-        update.add_field(name = "New role: PI", value = "Choose two players each night to see if they're on the same side!")
-        update.add_field(name = "New role: Spy", value = "See who your target visits each night!")
-        update.add_field(name = "New role: Bomber", value = "Blow stuff up and win!")
-        update.add_field(name = "New role: Dictator", value = "Choose a side and try to get that side to win! If you succeed you win instead of that side!")
+        update = discord.Embed(title = "Latest Mafia Updates", description = "Patch 2.0", colour = discord.Colour.blue())
+        update.add_field(name = "New feature", value = "You can now designate a category where I create the text channel! Type m.custom category `category id `!")
+        update.add_field(name = "Adjusted modes", value = "Crazy mode now has less roles, but have no fear...")
+        update.add_field(name = "New game mode: Chaos!", value = "Every role is in play!")
+        update.add_field(name = "Balanced roles", value = "In a party with 10 or more people, there will be a certain amount of villagers to balance out the sides.")
+        update.add_field(name = "Adjusted command: m.gamemode", value = "Shows a list of available game modes. To change the game mode, use m.custom!")
         update.add_field(name = "New role: Baiter", value = "Bait people to visit you so you can kill them! Kill three people to win (Doesn't affect flow of game)")
         update.add_field(name = "Mafia role change", value = "Mafia now only do what the Godfather commands. Also the chance of framer appearing requires a minimum of 6 people.")
         update.add_field(name = "Updated command: m.roles", value = "m.roles shows a list of all the roles. Do m.roles `role` to view specific information about a role!")
@@ -76,19 +82,14 @@ class helpC(commands.Cog):
             await ctx.channel.send("Can't send a DM. Check your privacy settings.")
     @commands.command(pass_context = True)
     async def info(self, ctx):
-        
         info = discord.Embed(title = "Mafiabot", colour = discord.Colour.orange())
         info.set_thumbnail(url = self.bot.user.avatar_url)
         info.add_field(name = "What I do:", value = "Host mafia on your discord server!", inline = False)
-        info.add_field(name = "What are my commands?", value = "My commands can be found with m.help.", inline = False)
         info.add_field(name = "Find out what's the latest update with the command:", value = "m.updates", inline = False)
         info.add_field(name = "Library", value = "discord.py", inline = True)
         info.add_field(name = "Currently on:", value = "{} servers!".format(len(self.bot.guilds)), inline = True)
         info.add_field(name = "Creator:", value = "<@217380909815562241>", inline = True)
-        info.add_field(name = "Upvote me!", value = "https://discordbots.org/bot/511786918783090688", inline = False)
-        info.add_field(name = "Invite me!", value = "https://discordapp.com/oauth2/authorize?client_id=511786918783090688&scope=bot&permissions=272641041", inline = False)
-        info.add_field(name = "Join the support server!", value = "https://discord.gg/Qdz3Cvu", inline = False)
-        info.add_field(name = "The bot stopped working during a game of mafia. What do I do?", value = "Use the m.reset command and report it to the Mafiabot Support Discord.", inline = False)
+        info.add_field(name = "Here are some cool links!", value = "[Link to my upvote page!](https://discordbots.org/bot/511786918783090688)\n[Invite me to your cool server!](https://discordapp.com/oauth2/authorize?client_id=511786918783090688&scope=bot&permissions=272641041)\n[Join the support server!](https://discord.gg/Qdz3Cvu)", inline = False)
         
         await ctx.channel.send(embed = info)
     
@@ -108,11 +109,9 @@ class helpC(commands.Cog):
         embed.add_field(name = "Step 3", value = "Play", inline = False)
         embed.add_field(name = "How to play:", value = "To play, there must be at least 5 people in the Mafia party.", inline = False)
         embed.add_field(name = "#1", value = "When the game starts, each player will receive their role through dm.", inline = False)
-        embed.add_field(name = "#2", value = "Everyone will go to sleep. The Mafia would be the first to wake up, and through dm he/she can choose which player to kill.", inline = False)
-        embed.add_field(name = "#3", value = "After, the doctor will wake up, and he/she can choose a person to save through dm.", inline = False)
-        embed.add_field(name = "#4", value = "Finally, the detective will wake up and choose a person to accuse through dm. He/she would be informed if the person is the Mafia. If he/her investigates the suspect, then he/she will be informed that the suspect is the mafia.", inline = False)
-        embed.add_field(name = "#5", value = "Everybody wakes up and the bot will inform you through the mafia channel who was killed. The group has a minute to discuss who is the Mafia.", inline = False)
-        embed.add_field(name = "#6", value = "Everyone then nominate and vote on people to lynch. The most voted person will then be lynched.")
+        embed.add_field(name = "#2", value = "Everyone will go to sleep. People with active roles will then be prompted to choose targets by reacting.", inline = False)
+        embed.add_field(name = "#5", value = "Everybody wakes up and the bot will inform you through the mafia channel who was killed. The group will have time to discuss who is the Mafia.", inline = False)
+        embed.add_field(name = "#6", value = "Everyone then vote on people to lynch. The most voted person will then be lynched.")
         embed.add_field(name = "#7", value = "The cycle continues until only if the number of mafias are greater than villagers, the mafia kills everyone, or all the mafia dies.")
         embed.set_footer(text = "For more information, type m.roles for roles, m.help for commands.")
         await ctx.message.author.send(embed = embed)
@@ -124,15 +123,20 @@ class helpC(commands.Cog):
             classicRoleStr = ""
             for item in self.roleList:
                 if item.mode == "classic":
-                    classicRoleStr += item.name+" : " +item.side + "\n"
+                    classicRoleStr += item.name +" : " + item.side + "\n"
             
             crazyRoleStr = ""
             for item in self.roleList:
                 if item.mode == "crazy":
-                    crazyRoleStr += item.name + " : " +item.side + "\n"
+                    crazyRoleStr += item.name + " : " + item.side + "\n"
+            chaosRoleStr = ""
+            for item in self.roleList:
+                if item.mode == "chaos":
+                    chaosRoleStr += item.name + " : " + item.side + "\n"
 
-            embed.add_field(name= "Classic roles: ", value = classicRoleStr, inline = True)
-            embed.add_field(name = "Crazy roles: ", value = crazyRoleStr, inline = True)
+            embed.add_field(name= "Classic roles: ", value = classicRoleStr)
+            embed.add_field(name = "Crazy roles: ", value = crazyRoleStr)
+            embed.add_field(name = "Chaos roles: ", value = chaosRoleStr)
             embed.set_thumbnail(url = self.bot.user.avatar_url)
             embed.set_footer(text = "For more information about each role, type m.role `role` to view more!")
             await ctx.channel.send(embed= embed)
@@ -153,46 +157,63 @@ class helpC(commands.Cog):
             else:
                 await ctx.channel.send("That's not a role I know lmao.")
 
+    @commands.command(pass_context = True)
+    async def winCondition(self, ctx):
+        embed = discord.Embed(title = "Win conditions:trophy:", colour = discord.Colour.red())
+        embed.add_field(name = "All threats eliminated", value = "Villager wins", inline = False)
+        embed.add_field(name = "# of mafias > # of villagers", value = "Mafia wins", inline = False)
+        embed.add_field(name = "# of mafias = # of villagers", value = "Mafia wins", inline = False)
+        embed.add_field(name = "Executioner's target gets lynched", value = "Executioner wins", inline = False)
+        embed.add_field(name = "Jester gets lynched", value = "Jester wins")
+        embed.add_field(name = "All people dead (maybe except bomber)", value = "Bomber wins", inline = False)
+        embed.add_field(name = "Dictator's chosen side wins and dictator is alvie", value = "Dictator wins", inline = False)
+        await ctx.send(embed = embed)
 
     @commands.command(pass_context = True)
     async def help(self, ctx, *args):
         if len(args) == 0:
             commandGame_str = ""
-            for item in self.commandsDict.keys():
+            for item in self.commandDict.keys():
                 commandGame_str += item + "\n"
 
             embed = discord.Embed(title = "Mafia Commands", colour = discord.Colour.orange())
-            embed.add_field(name = "Game commands:", value = commandGame_str, inline = True)
+            for commandType in self.commandDict.keys():
+                tempStr = ""
+                for c in self.commandDict[commandType].keys():
+                    tempStr += c + "\n"
+                embed.add_field(name = commandType, value = tempStr)
 
-            embed.add_field(name = "All customizable settings: ", value = "dmtime: amount of time people can respond to dm messages\n talkTime: amount of time for group discussion\n voteTime: Amount of time to vote.")
+            embed.add_field(name = "Customizable settings: ", value = "dmTime\ntalkTime\nvoteTime\ngamemode")
             embed.set_footer(text = "For more information, type m.help 'command' to see more!")
             embed.set_thumbnail(url = self.bot.user.avatar_url)
             await ctx.channel.send(embed = embed)
             return
         elif len(args) == 1:
-            if args[0] in self.commandsDict.keys():
-                embed = discord.Embed(title = args[0], description = self.commandsDict[args[0]], colour = discord.Colour.orange())
-                await ctx.channel.send(embed = embed)
-                return
-            await ctx.channel.send("Boi that's not a command.")
+            try:
+                for commandType in self.commandDict.keys():
+                    if args[0] in self.commandDict[commandType].keys():
+
+                        embed = discord.Embed(title = "Command: " + args[0], description = self.commandDict[commandType][args[0]], colour = discord.Colour.orange())
+                        await ctx.channel.send(embed = embed)
+                        return
+            except:
+                await ctx.channel.send("Lol that's not a command.")
+
+
 
 
     @commands.command(pass_context = True)
     async def support(self, ctx):
-        await ctx.channel.send("Would you like to request a helper to help with your problems?(y/n)\n*Note: I will need permission to send invitations.(Make sure that I do before requesting)")
-        answer = await self.bot.wait_for('message', check=lambda message: message.author == ctx.author and (message.content.lower() == "y" or message.content.lower() == "yes" or message.content.lower() == "n" or message.content.lower() == "no"), timeout = 20)
-        if not "n" in answer.content.lower():
-            try:
-                supportChannel = self.bot.get_channel(596963027597787157)
-                invite = await ctx.channel.create_invite()
-                await supportChannel.send(invite)
-                await ctx.channel.send("Request sent! Now we wait...(Plz be patient not all our helpers will be on 24/7)")
-                return
-            except discord.Forbidden:
-                await ctx.channel.send("Error. I can't create an invite lol.")
-                return
-        
-        await ctx.channel.send("Lol ok. False alarm, I guess.")
+        embed = discord.Embed(title = "The Official Mafiabot Support Server!", description = "[Click here!](https://discord.gg/4KAqmWM)", colour = discord.Colour.blue())
+        embed.add_field(name = "Got a question? A suggestion? A story submission? Lonely? Want to play mafia?",  value = "Click on that link above!")
+        embed.set_thumbnail(url = self.bot.user.avatar_url)
+        await ctx.send(embed = embed)
+    
+    @commands.command(pass_context = True)
+    async def upvote(self, ctx):
+        embed = discord.Embed(title = "Upvote Mafiabot on discordbots.org! Just click on that tiny link below. (Psst, my creator will give you 30 points whenever you upvote if you're in the support server...)", description = "[Click me!](https://discordbots.org/bot/511786918783090688)", colour = discord.Colour.blue())
+        embed.set_thumbnail(url = self.bot.user.avatar_url)
+        await ctx.send(embed = embed)
 
 
 def setup(bot):

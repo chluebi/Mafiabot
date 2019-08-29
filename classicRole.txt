@@ -1,5 +1,5 @@
 Godfather : Decides each who to kill. If you have a mafia, the mafia will kill for you. Otherwise you will have to get your own hands dirty. : Kill all villagers : Mafia : https://grist.files.wordpress.com/2009/06/wind-mafia_400.jpg
-Mafia : Carry out the Godfather's kill orders. If the Godfather dies you become the Godfather. (Minimum party size- 7) : Kill all villagers : Mafia : https://www.mobafire.com/images/avatars/graves-mafia.png
+Mafia : Carry out the Godfather's kill orders. If the Godfather dies you become the Godfather. (Minimum party size- 8) : Kill all villagers : Mafia : https://www.mobafire.com/images/avatars/graves-mafia.png
 Doctor : Save a person from the mafia each night. Cannot save the same person two nights in row. : Save the town : Villager : https://memegenerator.net/img/images/11270002.jpg
 Detective : Checks a person each night to see if they're on the mafia's side : Find the mafia(s) : Villager : https://s2.r29static.com//bin/entry/3d2/720x864,85/2176441/you-dont-emneedem-to-know-2176441.webp
 Villager : None : None : Villager : https://www.mariowiki.com/images/thumb/a/ac/Villager_SSBU.png/250px-Villager_SSBU.png

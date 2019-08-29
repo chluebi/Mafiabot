@@ -1,0 +1,41 @@
+{
+    "Game": 
+    {
+        "join": "Joins the current mafia party! First player join wil be party leader.\n", 
+        "leave": "Leaves the current mafia party. Cannot do so while a game is setting or playing.\n", 
+        "remove @user": "Kicks a player off the party (Must be party leader) \n", 
+        "party": "Shows the current mafia party!\n", 
+        "setup": "Sets up a game of mafia with the current party on the server (Minimum players is 5). Each player will receive a dm from a bot about their role. (Must be party leader) \n", "start": "Starts the mafia game (Must do m.setup first!) (Must be party leader)\n", 
+        "stop": "Stops the current mafia game after the current round.\n", 
+        "reset": "Resets the variables on the server (ONLY DO THIS IF MAFIABOT IS BUGGED OUT)\n"
+    }, 
+    "Settings": {
+        "gamemode ": "Shows info about each game mode!\n", 
+        "setting": "Shows the current adjustable settings on the server\n", 
+        "custom": "Customize the settings on the server. Ex. m.custom dmTime 30 or m.custom gamemode crazy\n"
+    }, 
+    "Help": {"info": "Reveals bot's info (like a link to the Mafiabot Support Server!)\n", 
+        "perms": "Shows the required perms for Mafiabot to function most of the time\n", 
+        "patch": "Shows the latest patch!\n", 
+        "roles": "Shows a list of roles \n", 
+        "roles `role`": "Show the information about a specific role\n", 
+        "game": "Shows information about the game of Mafia!\n", 
+        "help": "Shows help duh\n", 
+        "support": "Gives a link to the Official Mafiabot Support Sever! I heard it's pretty fun there."
+    }, 
+    "Mini Games": {
+        "mini": "Shows all the mini games Mafiabot can play!\n", 
+        "duel": "Challenges another player to a duel. Each turn players choose their attack and determines who wins. Last man standing wins. Ex. m.duel @linkboi\n", 
+        "slot (bet)": "Plays a slot machine! Bet a certain number (default is 10 and must be at least 10). Type m.slotInfo to view more!\n", 
+        "combo": "Shows info about the slot!\n"
+    }, 
+    "Economy": {
+        "record @user": "Shows the past games played and the amount of Mafia points!\n", 
+        "balance": "Shows the balance (duh)\n", 
+        "transfer @user (amount)": "Transfers an certain amount of mafia points from your account to the target's account\n", 
+        "shop": "Opens up Mafiabot's shop!\n", 
+        "buy": "Buys item from the shop by selecting items associated with its number!\n", 
+        "titles": "Shows a list of titles owned by you! (Buy titles from the shop!)\n", 
+        "setTitle": "Equips a title you own by selecting one associated with its number!"
+    }
+}

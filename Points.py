@@ -91,7 +91,7 @@ class Points(commands.Cog):
             playerObj.titles.append(title)
             cog.editFile(playerObj)
             supportChannel = self.bot.get_channel(550923896858214446)
-            ##await supportChannel.send("{} bought {} on {}".format(ctx.author.name, title, ctx.guild.name))
+            ###await supportChannel.send("{} bought {} on {}".format(ctx.author.name, title, ctx.guild.name))
             return
         
         await ctx.channel.send("Lol you don't have enough mafia points.")
@@ -129,6 +129,23 @@ class Points(commands.Cog):
             return
         await ctx.channel.send("Lol you don't have a title with that number. Type m.titles to check out all your owned titles.")
     
+    @commands.command(pass_context = True)
+    async def giveAll(self, ctx, amount, url, *, reason):
+        if ctx.author.id != 217380909815562241:
+            await ctx.send("Lol you're not my owner.")
+            return
+        embed = discord.Embed(title = "Congratulations! You have received " + str(amount) + " mafia points from the almighty linkboi!", description = reason, colour = discord.Colour.green())
+        embed.set_image(url = url)
+        cog = self.bot.get_cog("mafia")
+        for user in cog.userList:
+            user.points += int(amount)
+            try:
+                player = self.bot.get_user(user.id)
+                cog.editFile(user)
+                await player.send(embed = embed)
+            except:
+                pass
+            
 
     def getCTitle(self, ID):
         cog = self.bot.get_cog("mafia")

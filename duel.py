@@ -176,10 +176,10 @@ class Duel(commands.Cog):
                     if answer.content == "y" or answer.content == "yes":
                         
                         supportChannel = self.bot.get_channel(550923896858214446)
-                        ##await supportChannel.send("{} started duel with {}!".format(player1.name, victim.name))
+                        ###await supportChannel.send("{} started duel with {}!".format(player1.name, victim.name))
                         await channel.send("Let the duel begin!")
                         await self.playDuel(player1, victim, channel)
-                        ##await supportChannel.send("{} ended duel with {}!".format(player1.name, victim.name))
+                        ###await supportChannel.send("{} ended duel with {}!".format(player1.name, victim.name))
                         
                     else:
 

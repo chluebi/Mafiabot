@@ -8,7 +8,7 @@ import logging
 import traceback
 
 import MAFIA.dbl as dblthing
-bot = commands.Bot(command_prefix='m.')
+bot = commands.Bot(command_prefix='r.')
 bot.remove_command('help')
 
 extensions = ['mafia', 'Points', 'duel', 'slot', 'help', 'troll']
@@ -35,16 +35,19 @@ async def on_guild_join(server):
     supportChannel = bot.get_channel(550923896858214446)
     embed = discord.Embed(title = "Joined server {}".format(server.name), description = "{} members".format(len(server.members)), colour = discord.Colour.green())
     embed.set_thumbnail(url = server.icon_url)
-    await supportChannel.send(embed = embed)
-
+    #await supportChannel.send(embed = embed)
+"""
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
         if error.param.name == "user" or error.param.name == "victim":
             await ctx.channel.send("Looks like you forgot to @ someone.")
             return
-        if error.param.name == "mode":
-            await ctx.channel.send("Looks like you forgot to put a mode. The available modes are classic and crazy.")
+        if error.param.name == "var":
+            await ctx.channel.send("Looks like you forgot a setting. See all adjustable settings with m.setting!")
+            return
+        if error.param.name == "number":
+            await ctx.channel.send("Looks like you forgot a value!")
             return
         await ctx.channel.send("Looks like you forgot a required argument: `{arg}`. lol.".format(
                     arg=error.param.name
@@ -53,7 +56,7 @@ async def on_command_error(ctx, error):
         await ctx.channel.send("Call me stupid but I don't understand that input.")
     else:
         print(error)
- 
+"""
 
 
 
@@ -62,7 +65,7 @@ async def on_guild_remove(server):
     supportChannel = bot.get_channel(550923896858214446)
     embed = discord.Embed(title = "Left server {}".format(server.name), description = "{} members".format(len(server.members)), colour = discord.Colour.red())
     embed.set_thumbnail(url = server.icon_url)
-    await supportChannel.send(embed = embed)
+    #await supportChannel.send(embed = embed)
     print ("Left server ({}: {} members) ".format(server.name, len(server.members)))
 
     
@@ -79,4 +82,4 @@ if __name__ == '__main__':
         keys = json.load(f)
     thing = keys['key']
     testThing = keys['test']
-    bot.run(thing)
+    bot.run(testThing)

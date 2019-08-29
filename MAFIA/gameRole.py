@@ -1,6 +1,8 @@
 import discord
 from discord.ext import commands
 import random
+
+
 #Parent
 class GameR:
     def __init__(self, user):
@@ -37,7 +39,7 @@ class GameR:
         found = False
         for reaction in cache_msg.reactions:
             async for user in reaction.users():
-                if user.id != 511786918783090688 and reaction.emoji in self.reactionList:
+                if user.id != 480553111971430420 and reaction.emoji in self.reactionList:
                     answerEmoji = reaction.emoji
                     await self.user.send(answerEmoji)
                     found = True
@@ -176,12 +178,14 @@ class Mayor(GameR):
             answerEmoji = None
             for reaction in cache_msg.reactions:
                 async for user in reaction.users():
-                    if user.id != 511786918783090688 and (reaction.emoji == '🇾' or reaction.emoji == '🇳'):
+                    if user.id != 480553111971430420 and (reaction.emoji == '🇾' or reaction.emoji == '🇳'):
                         answerEmoji = reaction.emoji
                         break
-            if answerEmoji != '🇳':
+            if answerEmoji == '🇾':
                 self.revealed = True
                 await self.user.send("You have decided to reveal yourself tomorrow.")
+            else:
+                await self.user.send("Alright, not revealing yourself yet...")
         
 class Framer(GameR):
     def __init__(self, user):
@@ -216,6 +220,8 @@ class Vig(GameR):
         self.message = await GameR.makePompt(self, self.vigTargets, "Who do you want to shoot tonight?", "React with the associated emoji to choose your target!",  "https://pmcdeadline2.files.wordpress.com/2018/03/arrow.png?w=446&h=299&crop=1", "You have {} seconds to choose.".format(dmTime), discord.Colour.green())
     async def getTarget(self):
         self.victim = await GameR.getResult(self, self.message, self.vigTargets)
+
+
 class Distractor(GameR):
     def __init__(self, user):
         GameR.__init__(self, user)
@@ -241,7 +247,8 @@ class Distractor(GameR):
     async def getTarget(self):
         if not self.cooldown:
             self.victim = await GameR.getResult(self, self.message, self.disTargets)
-            self.cooldown = True
+            if self.victim:
+                self.cooldown = True
         else:
             self.victim = None
             self.cooldown = False
@@ -270,7 +277,7 @@ class PI(GameR):
         count = 0
         for reaction in cache_msg.reactions:
             async for user in reaction.users():
-                if user.id != 511786918783090688 and reaction.emoji in self.reactionList:
+                if user.id != 480553111971430420 and reaction.emoji in self.reactionList:
                     answerEmojis.append(reaction.emoji)
                     count+=1
                     if count == 2:

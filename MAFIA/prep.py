@@ -33,16 +33,20 @@ class prepare:
         unassignedPlayers = list(self.mafiaPlayers.keys())
         size = len(unassignedPlayers)
         random.shuffle(unassignedPlayers)
-        extraRoles = ["executioner", "mayor", "vigilante", "distractor", "spy", "PI",]
-        if size>5:
-            extraRoles.append("framer")
-            extraRoles.append("dictator")
+        crazyRoles = ["executioner", "mayor", "vigilante"]
+        chaosRoles = ["spy", "PI", "distractor"]
+        if size > 5:
+            crazyRoles.append("framer")
+            chaosRoles.append("dictator")
         if size > 6:
-            extraRoles.append("baiter")
-            extraRoles.append("bomber")
+            chaosRoles.append("baiter")
+            chaosRoles.append("bomber")
+            
+        if size > 7:
             self.setRole("mafia", unassignedPlayers)
+            chaosRoles.append("dictator")
 
-
+        #big boi mafia
         self.setRole("godfather", unassignedPlayers)
 
         
@@ -56,11 +60,30 @@ class prepare:
         if (self.mode == "crazy"):
             count = len(unassignedPlayers)
             
-            while (count > 0 and len(extraRoles) != 0):
-                role = random.choice(extraRoles)
+            while (count > 0 and len(crazyRoles) != 0):
+                role = random.choice(crazyRoles)
                 self.setRole(role, unassignedPlayers)
-                print(role)
-                extraRoles.remove(role)
+                crazyRoles.remove(role)
+                count-=1
+        
+        #balance out sides for chaos mode (I've seen a lot of salt)
+        if size > 10 and self.mode == "chaos":
+            for _ in range(3):
+                self.setRole("villager", unassignedPlayers)
+        roleList = []
+        if self.mode == "crazy":
+            roleList = crazyRoles
+        
+        if self.mode == "chaos":
+            roleList = crazyRoles + chaosRoles
+        random.shuffle(roleList)
+        if (self.mode != "classic"):
+            count = len(unassignedPlayers)
+
+            while (count > 0 and len(roleList) != 0):
+                role = random.choice(roleList)
+                self.setRole(role, unassignedPlayers)
+                roleList.remove(role)
                 count-=1
         for _ in range(len(unassignedPlayers)):
             self.setRole("villager", unassignedPlayers)
