@@ -11,7 +11,7 @@ class helpC(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjUxMTc4NjkxODc4MzA5MDY4OCIsImJvdCI6dHJ1ZSwiaWF0IjoxNTQ2NjU0ODk3fQ.hADbMQxWCw0czaTDcVUpqAdCUzEpHngQUw-HtQeHVV8'  #  set this to your DBL token
-        self.dblpy = dbl.Client(self.bot, self.token)
+        self.dblpy = dbl.DBLClient(self.bot, self.token)
         self.commandsDict = {}
         self.roleList = []
         with open("classicRole.txt") as f:
@@ -41,6 +41,8 @@ class helpC(commands.Cog):
         for item in await self.dblpy.get_upvote_info():
             temp.append(item['username'])
         await ctx.message.channel.send(temp)
+
+
     @commands.command(name = "patch", aliases = ['updates', 'update', 'patches', "changes"])
     async def patch(self, ctx):
         update = discord.Embed(title = "Latest Mafia Updates", description = "Patch 2.0", colour = discord.Colour.blue())
@@ -89,13 +91,13 @@ class helpC(commands.Cog):
         info.add_field(name = "Library", value = "discord.py", inline = True)
         info.add_field(name = "Currently on:", value = "{} servers!".format(len(self.bot.guilds)), inline = True)
         info.add_field(name = "Creator:", value = "<@217380909815562241>", inline = True)
-        info.add_field(name = "Here are some cool links!", value = "[Link to my upvote page!](https://discordbots.org/bot/511786918783090688)\n[Invite me to your cool server!](https://discordapp.com/oauth2/authorize?client_id=511786918783090688&scope=bot&permissions=272641041)\n[Join the support server!](https://discord.gg/Qdz3Cvu)", inline = False)
+        info.add_field(name = "Here are some cool links!", value = "[Link to my upvote page!](https://discordbots.org/bot/511786918783090688)\n[Invite me to your cool server!](https://discordapp.com/oauth2/authorize?client_id=511786918783090688&scope=bot&permissions=272641041)\n[Join the support server!](https://discord.gg/2bnpcx8)", inline = False)
         
         await ctx.channel.send(embed = info)
     
     @commands.command(name = "invite", aliases = ["link"])
     async def invite(self, ctx):
-        await ctx.channel.send("https://discordapp.com/oauth2/authorize?client_id=511786918783090688&scope=bot&permissions=272641040")
+        await ctx.channel.send("[Here's a very cool link to invite me to your server!]https://discordapp.com/oauth2/authorize?client_id=511786918783090688&scope=bot&permissions=272641040")
     @commands.command(pass_context = True)
     async def game(self, ctx):
         stuff = discord.Embed(title = "Info on the game has been sent to your dm!", colour = discord.Colour.orange())
@@ -166,7 +168,7 @@ class helpC(commands.Cog):
         embed.add_field(name = "Executioner's target gets lynched", value = "Executioner wins", inline = False)
         embed.add_field(name = "Jester gets lynched", value = "Jester wins")
         embed.add_field(name = "All people dead (maybe except bomber)", value = "Bomber wins", inline = False)
-        embed.add_field(name = "Dictator's chosen side wins and dictator is alvie", value = "Dictator wins", inline = False)
+        embed.add_field(name = "Dictator's chosen side wins and dictator is alive", value = "Dictator wins", inline = False)
         await ctx.send(embed = embed)
 
     @commands.command(pass_context = True)
@@ -204,7 +206,7 @@ class helpC(commands.Cog):
 
     @commands.command(pass_context = True)
     async def support(self, ctx):
-        embed = discord.Embed(title = "The Official Mafiabot Support Server!", description = "[Click here!](https://discord.gg/4KAqmWM)", colour = discord.Colour.blue())
+        embed = discord.Embed(title = "The Official Mafiabot Support Server!", description = "[Click here!](https://discord.gg/2bnpcx8)", colour = discord.Colour.blue())
         embed.add_field(name = "Got a question? A suggestion? A story submission? Lonely? Want to play mafia?",  value = "Click on that link above!")
         embed.set_thumbnail(url = self.bot.user.avatar_url)
         await ctx.send(embed = embed)
@@ -214,6 +216,7 @@ class helpC(commands.Cog):
         embed = discord.Embed(title = "Upvote Mafiabot on discordbots.org! Just click on that tiny link below. (Psst, my creator will give you 30 points whenever you upvote if you're in the support server...)", description = "[Click me!](https://discordbots.org/bot/511786918783090688)", colour = discord.Colour.blue())
         embed.set_thumbnail(url = self.bot.user.avatar_url)
         await ctx.send(embed = embed)
+    
 
 
 def setup(bot):

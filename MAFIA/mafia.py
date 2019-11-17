@@ -170,7 +170,7 @@ class mafia(commands.Cog):
                 await channel.send(embed = self.makeEmbed("Reset complete. All conditions are cleared."))
                 print ("Reset on {}".format(server.name))
                 supportChannel = self.bot.get_channel(604716684955353098)
-                #await supportChannel.send("Reset on {}".format(server.name))
+                await supportChannel.send("Reset on {}".format(server.name))
 
             else:
                 await channel.send(embed = self.makeEmbed("Ok. No reset."))
@@ -191,7 +191,7 @@ class mafia(commands.Cog):
               await channel.send(embed = self.makeEmbed("Can't clear party right now. There is a game going on!"))
           else:
               supportChannel = self.bot.get_channel(550923896858214446)
-              ###await supportChannel.send("Party cleared on {}".format(server.name))
+              await supportChannel.send("Party cleared on {}".format(server.name))
               self.mafiaPlayers[server.id] = {}
               await channel.send(embed = self.makeEmbed("The current party is now cleared."))
 
@@ -243,7 +243,7 @@ class mafia(commands.Cog):
                     embed = discord.Embed(title = "{} joined on {}".format(ctx.message.author.name, server.name), description = "Server size: {}".format(len(server.members)), colour = discord.Colour.dark_blue())
                     embed.set_thumbnail(url = server.icon_url)
                     supportChannel = self.bot.get_channel(550923896858214446)
-                    #await supportChannel.send(embed = embed)
+                    await supportChannel.send(embed = embed)
                     self.mafiaPlayers[server.id][ctx.message.author] = "" # add author to dictionary
 
                    
@@ -274,7 +274,7 @@ class mafia(commands.Cog):
                     embed = discord.Embed(title = "{} left on {}".format(ctx.message.author.name, server.name), description = "{}".format(len(server.members)), colour = discord.Colour.dark_magenta())
                     embed.set_thumbnail(url = server.icon_url)
                     supportChannel = self.bot.get_channel(550923896858214446)
-                    #await supportChannel.send(embed = embed)
+                    await supportChannel.send(embed = embed)
                     print("{} left group on {}".format(ctx.message.author.name, server.name))
                     self.mafiaPlayers[server.id].pop(ctx.message.author, None)
                     await channel.send(embed = self.makeEmbed("{} left the party.".format(ctx.message.author.name)))
@@ -495,11 +495,10 @@ class mafia(commands.Cog):
                                 pass
                         
                         
-                    except discord.Forbidden:
-                        print("Forbidden error. Resetting...")
+                    except discord.Forbidden as e:
                         self.serverStatus[server.id]["ready"] = False
                         self.serverStatus[server.id]["setting"] = False
-                        embed = discord.Embed(title = "Error. Missing required permissions. Please check all of my required permissions with m.perms and try again.", colour = discord.Colour.red())
+                        embed = discord.Embed(title = e.text, colour = discord.Colour.red())
 
                         await channel.send(embed = embed)
 
@@ -561,7 +560,7 @@ class mafia(commands.Cog):
                     embed.add_field(name = "Server id: ", value = "{}".format(server.id), inline = False)
                     embed.add_field(name = "Mode: ", value = self.getMode(server.id))
                     embed.set_thumbnail(url = server.icon_url)
-                    #await supportChannel.send(embed = embed)
+                    await supportChannel.send(embed = embed)
                     embed = self.makeEmbed("Everyone please navigate to the mafia text channel!")
                     embed.set_image(url = "https://cdn.aarp.net/content/dam/aarp/money/budgeting_savings/2016/06/1140-navigating-medicare-mistakes.imgcache.revdd9dcfe7710d97681da985118546c1a9.jpg")
                     await channel.send(embed = embed)
@@ -726,7 +725,7 @@ class mafia(commands.Cog):
                         if self.serverStatus[server.id]['commandStop']:
                             await channel.send(embed = self.makeEmbed("Due to a request, I will end this game now."))
                             print("Requested stop on {}".format(server.name))
-                            #await supportChannel.send(embed = discord.Embed(title = "A game has stopped on {}".format(server.name), description = "{}".format(server.id), colour = discord.Colour.dark_magenta()))
+                            await supportChannel.send(embed = discord.Embed(title = "A game has stopped on {}".format(server.name), description = "{}".format(server.id), colour = discord.Colour.dark_magenta()))
                             await asyncio.sleep(5)
                             await channel.delete()
                             break
@@ -1386,7 +1385,7 @@ class mafia(commands.Cog):
                     embed = discord.Embed(title = "A game has finished on {}.".format(server.name), description = "Group size: {}".format(len(currentP.keys())), colour = discord.Colour.dark_purple())
                     embed.add_field(name = "Server id: ", value = "{}".format(server.id))
                     embed.set_thumbnail(url = server.icon_url)
-                    #await supportChannel.send(embed = embed)
+                    await supportChannel.send(embed = embed)
 
                         
                 except Exception as e:
@@ -1405,7 +1404,7 @@ class mafia(commands.Cog):
                     embed.add_field(name = "Error:", value = "{}".format(traceback.format_exc()))
                     
 
-                    #await supportChannel.send( embed = embed)
+                    await supportChannel.send( embed = embed)
                     self.serverStatus[server.id]["ready"] = False
                     self.serverStatus[server.id]["gameOn"] = False
                     self.serverStatus[server.id]["commandStop"] = False

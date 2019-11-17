@@ -20,7 +20,8 @@ class prepare:
         self.mafiaPlayers = mafiaPlayers
         self.mode = mode
         self.bot = bot
-        
+        self.villagerR = ["villager", "doctor", "detective", "PI", "mayor", "vigilante", "spy"]
+        self.mafiaR = ["mafia", "godfather", "framer"]
     def setRole(self, roleName, unassignedPlayers):
         randthing = random.randint(3, 150)
         for _ in range(randthing):
@@ -37,7 +38,6 @@ class prepare:
         chaosRoles = ["spy", "PI", "distractor"]
         if size > 5:
             crazyRoles.append("framer")
-            chaosRoles.append("dictator")
         if size > 6:
             chaosRoles.append("baiter")
             chaosRoles.append("bomber")
@@ -57,14 +57,6 @@ class prepare:
         detectiveCount = 1 # see above
         for _ in range(detectiveCount):
             self.setRole("detective", unassignedPlayers)
-        if (self.mode == "crazy"):
-            count = len(unassignedPlayers)
-            
-            while (count > 0 and len(crazyRoles) != 0):
-                role = random.choice(crazyRoles)
-                self.setRole(role, unassignedPlayers)
-                crazyRoles.remove(role)
-                count-=1
         
         #balance out sides for chaos mode (I've seen a lot of salt)
         if size > 10 and self.mode == "chaos":

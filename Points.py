@@ -38,7 +38,7 @@ class Points(commands.Cog):
 
         await channel.send(embed = embed)
     
-    @commands.command(name = "points", aliases = ["point", "balance"])
+    @commands.command(name = "points", aliases = ["point", "balance", "bal"])
     async def points(self, ctx):
         channel = ctx.channel
         user = ctx.author
@@ -91,7 +91,7 @@ class Points(commands.Cog):
             playerObj.titles.append(title)
             cog.editFile(playerObj)
             supportChannel = self.bot.get_channel(550923896858214446)
-            ###await supportChannel.send("{} bought {} on {}".format(ctx.author.name, title, ctx.guild.name))
+            await supportChannel.send("{} bought {} on {}".format(ctx.author.name, title, ctx.guild.name))
             return
         
         await ctx.channel.send("Lol you don't have enough mafia points.")
@@ -123,7 +123,6 @@ class Points(commands.Cog):
             playerObj.currentTitle = playerObj.titles[index-1]
             embed = discord.Embed(title = "{}'s title is now '{}'".format(ctx.author.name, playerObj.currentTitle), description = "What a cool kid.", colour = discord.Colour.purple())
             embed.set_thumbnail(url = ctx.author.avatar_url)
-            embed.set_image(url = 'https://pics.me.me/google-xa-scott-lang-full-name-videos-all-images-news-58038378.png')
             await ctx.channel.send(embed = embed)
             cog.editFile(playerObj)
             return
@@ -132,7 +131,6 @@ class Points(commands.Cog):
     @commands.command(pass_context = True)
     async def giveAll(self, ctx, amount, url, *, reason):
         if ctx.author.id != 217380909815562241:
-            await ctx.send("Lol you're not my owner.")
             return
         embed = discord.Embed(title = "Congratulations! You have received " + str(amount) + " mafia points from the almighty linkboi!", description = reason, colour = discord.Colour.green())
         embed.set_image(url = url)

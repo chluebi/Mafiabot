@@ -8,7 +8,7 @@ import logging
 import traceback
 
 import MAFIA.dbl as dblthing
-bot = commands.Bot(command_prefix='r.')
+bot = commands.Bot(command_prefix='m.')
 bot.remove_command('help')
 
 extensions = ['mafia', 'Points', 'duel', 'slot', 'help', 'troll']
@@ -35,8 +35,8 @@ async def on_guild_join(server):
     supportChannel = bot.get_channel(550923896858214446)
     embed = discord.Embed(title = "Joined server {}".format(server.name), description = "{} members".format(len(server.members)), colour = discord.Colour.green())
     embed.set_thumbnail(url = server.icon_url)
-    #await supportChannel.send(embed = embed)
-"""
+    await supportChannel.send(embed = embed)
+
 @bot.event
 async def on_command_error(ctx, error):
     if isinstance(error, commands.MissingRequiredArgument):
@@ -56,7 +56,7 @@ async def on_command_error(ctx, error):
         await ctx.channel.send("Call me stupid but I don't understand that input.")
     else:
         print(error)
-"""
+
 
 
 
@@ -65,7 +65,7 @@ async def on_guild_remove(server):
     supportChannel = bot.get_channel(550923896858214446)
     embed = discord.Embed(title = "Left server {}".format(server.name), description = "{} members".format(len(server.members)), colour = discord.Colour.red())
     embed.set_thumbnail(url = server.icon_url)
-    #await supportChannel.send(embed = embed)
+    await supportChannel.send(embed = embed)
     print ("Left server ({}: {} members) ".format(server.name, len(server.members)))
 
     
@@ -82,4 +82,4 @@ if __name__ == '__main__':
         keys = json.load(f)
     thing = keys['key']
     testThing = keys['test']
-    bot.run(testThing)
+    bot.run(thing)

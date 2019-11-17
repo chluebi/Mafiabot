@@ -18,10 +18,25 @@ class Troll(commands.Cog):
             await ctx.channel.send("This person's role is the almighty linkboi")
         elif user.id == 252655058733367296:
             await ctx.channel.send("This person's role is jester")
+        elif user.id == 359200842563190787:
+            await ctx.send("A weeb.")
+        elif user.id == 124745315902291968:
+            await ctx.send("Joe.")
+        elif user.id == 216800764927016960:
+            await ctx.send("BTS Fan.")
         else:
             await ctx.channel.send("Idk lol")
 
-    
+    @commands.command(pass_context = True)
+    async def say(self, ctx, *, args):
+        if ctx.author.id != 217380909815562241 and ctx.author.id != 124745315902291968:
+            return
+        await ctx.send(args)
+        try:
+            await ctx.message.delete()
+        except Exception as e:
+            print(str(e))
+
     @commands.command(pass_context = True)
     async def killAll(self, ctx):
         channel = ctx.channel
