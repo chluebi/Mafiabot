@@ -1,7 +1,9 @@
 import discord
 from discord.ext import commands
 import random
-import MAFIA.gameRole as ParentR
+import sys
+sys.path.insert(1, 'C:/Users/Ernest/Desktop/Mafiabot/Mafiabot-1/MAFIA')
+import gameRole as ParentR
 GameR = ParentR.GameR
 
 class Mafia(GameR):
@@ -10,11 +12,11 @@ class Mafia(GameR):
         self.side = "mafia"
         self.name = "mafia"
     
-    def deathCheck(self, killer_role):
-        """
-        Key:
-        0 = Kill successful
-        1 = Kill unsuccessful
-        """
+    def check(self, visitor_role_obj):
+        return
+    
+    async def perform(self, currentP):
+        victimRoleObj = self.findRoleObj(self.victim, currentP)
+        victimRoleObj.check(self)
         
 

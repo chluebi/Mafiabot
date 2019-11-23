@@ -4,8 +4,11 @@ import asyncio
 import os
 import random
 from random import randint
+"""
 import MAFIA.playerinfo as playerinfo
 import MAFIA.gvar as gvar
+"""
+from roles import *
 
 class prepare:
 

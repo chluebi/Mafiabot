@@ -8,7 +8,7 @@ import logging
 import traceback
 
 import MAFIA.dbl as dblthing
-bot = commands.Bot(command_prefix='m.')
+bot = commands.Bot(command_prefix='r.')
 bot.remove_command('help')
 
 extensions = ['mafia', 'Points', 'duel', 'slot', 'help', 'troll']
@@ -82,4 +82,4 @@ if __name__ == '__main__':
         keys = json.load(f)
     thing = keys['key']
     testThing = keys['test']
-    bot.run(thing)
+    bot.run(testThing)

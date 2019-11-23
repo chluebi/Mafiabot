@@ -11,7 +11,7 @@ class helpC(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjUxMTc4NjkxODc4MzA5MDY4OCIsImJvdCI6dHJ1ZSwiaWF0IjoxNTQ2NjU0ODk3fQ.hADbMQxWCw0czaTDcVUpqAdCUzEpHngQUw-HtQeHVV8'  #  set this to your DBL token
-        self.dblpy = dbl.DBLClient(self.bot, self.token)
+        self.dblpy = dbl.Client(self.bot, self.token)
         self.commandsDict = {}
         self.roleList = []
         with open("classicRole.txt") as f:

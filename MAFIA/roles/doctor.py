@@ -1,7 +1,10 @@
 import discord
 from discord.ext import commands
 import random
-import MAFIA.gameRole as ParentR
+import sys
+# insert at 1, 0 is the script path (or '' in REPL)
+sys.path.insert(1, 'C:/Users/Ernest/Desktop/Mafiabot/Mafiabot-1/MAFIA')
+import gameRole as ParentR
 GameR = ParentR.GameR
 
 class Doctor(GameR):
@@ -23,4 +26,11 @@ class Doctor(GameR):
 
     async def getTarget(self):
         self.victim = await GameR.getResult(self, self.message, self.docTargets)
+    
+    def check(self, visitor_role_obj):
+        return
+    
+    async def perform(self, currentP):
+        victimRoleObj = self.findRoleObj(self.victim, currentP)
+        victimRoleObj.check(self)
         

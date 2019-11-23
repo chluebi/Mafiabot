@@ -47,8 +47,6 @@ class GameR:
             
             if found:
                 break
-            
-            
         
         if answerEmoji and answerEmoji != '🇦':
             index = self.reactionList.index(answerEmoji)
@@ -64,6 +62,15 @@ class GameR:
             embed = discord.Embed(title = "You didn't choose anything lmao. You ok?", colour = discord.Colour.greyple())
             await self.user.send(embed = embed)
             return None
+    
+    async def findRoleObj(self, currentP, username):
+        for player in currentP.keys():
+            if player.lower() == username.lower():
+                return currentP[player]
+    
+    def makeEmbed(self, txt):
+        embed = discord.Embed(title = txt, colour = discord.Colour.orange())
+        return embed
 
         
         

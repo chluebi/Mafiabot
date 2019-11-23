@@ -18,13 +18,13 @@ class mafia(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.userList = []
-        for filename in os.listdir("C:/Users/ernes/OneDrive/Desktop/MafiaBot/users"):
+        for filename in os.listdir("C:/Users/Ernest/Desktop/Mafiabot/MafiaBot-1/users"):
             self.userList.append(self.makeUser(filename))
 
 
     def makeUser(self, dir):
         tempList = []
-        with open("C:/Users/ernes/OneDrive/Desktop/MafiaBot/users/" + dir) as f:
+        with open("C:/Users/Ernest/Desktop/Mafiabot/MafiaBot-1/users/" + dir) as f:
             count = 0
             for line in f:
                 
@@ -1609,7 +1609,7 @@ class mafia(commands.Cog):
     
 
     def editFile(self, userObj):
-        path = "C:/Users/ernes/OneDrive/Desktop/MafiaBot/users/"
+        path = "C:/Users/Ernest/Desktop/Mafiabot/MafiaBot-1/users/"
         completeName = os.path.join(path, str(userObj.id)+".txt")
         n = open(completeName, "w")
         data_str = str(userObj.id) + "\n" + str(userObj.wins) + "\n" + str(userObj.games) + "\n" + str(userObj.points) + "\n" 

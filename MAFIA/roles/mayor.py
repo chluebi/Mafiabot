@@ -1,7 +1,9 @@
 import discord
 from discord.ext import commands
 import random
-import MAFIA.gameRole as ParentR
+import sys
+sys.path.insert(1, 'C:/Users/Ernest/Desktop/Mafiabot/Mafiabot-1/MAFIA')
+import gameRole as ParentR
 GameR = ParentR.GameR
 
 class Mayor(GameR):
@@ -37,3 +39,9 @@ class Mayor(GameR):
                 await self.user.send("You have decided to reveal yourself tomorrow.")
             else:
                 await self.user.send("Alright, not revealing yourself yet...")
+    
+    def check(self, visitor_role_obj):
+        return
+    
+    async def perform(self, currentP):
+        return

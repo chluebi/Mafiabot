@@ -1,20 +1,23 @@
 import discord
 from discord.ext import commands
 import random
-import MAFIA.gameRole as ParentR
+import sys
+sys.path.insert(1, 'C:/Users/Ernest/Desktop/Mafiabot/Mafiabot-1/MAFIA')
+import gameRole as ParentR
 GameR = ParentR.GameR
 
 class Bomber(GameR):
+    side = "neutral"
+    name = "bomber"
+    activated = False
+    plantedTargets = []
+    bombTargets = []
+    message = None
+    cooldown = False
+
     def __init__(self, user):
         GameR.__init__(self, user)
-        self.side = "neutral"
-
-        self.name = "bomber"
-        self.activated = False
-        self.plantedTargets = []
-        self.bombTargets = []
-        self.message = None
-        self.cooldown = False
+        
     async def sendPrompt(self, currentP, dmTime):
         self.bombTargets = []
         if self.plantedTargets:

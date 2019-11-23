@@ -1,7 +1,9 @@
 import discord
 from discord.ext import commands
 import random
-import MAFIA.gameRole as ParentR
+import sys
+sys.path.insert(1, 'C:/Users/Ernest/Desktop/Mafiabot/Mafiabot-1/MAFIA')
+import gameRole as ParentR
 GameR = ParentR.GameR
 
 class Distractor(GameR):
@@ -34,3 +36,12 @@ class Distractor(GameR):
         else:
             self.victim = None
             self.cooldown = False
+    async def check(self, visitor_role_obj):
+        return
+    
+    async def perform(self, currentP):
+        victimRoleObj = self.findRoleObj(self.victim, currentP)
+        if victimRoleObj.check(self):
+            return
+        
+        
