@@ -17,15 +17,15 @@ class Turns():
     def getRole(self, players, person):
         for player, data in players.items():
             if (player.name.lower() == person):
-                return data.roleName
+                return role.name
         return None
     def getRoleWName(self, players, person):
         for player, data in players.items():
             if person.lower() == player.name.lower():
-                return data.roleName
+                return role.name
     def findPlayerWithRole(self, players, role):
         for player, data in players.items():
-            if (data.roleName == role):
+            if (role.name == role):
                 return player
         return None
     async def killPlayer(self, party, person):
@@ -39,39 +39,46 @@ class Turns():
         except discord.HTTPException:
             pass
 
-    async def muteAll(self, party):
-        for player in party.keys():
+    async def muteAll(self, party, channel):
+        overwrites = discord.PermissionOverwrite(read_messages = True, send_messages = False, add_reactions = False)
+        for role in party.values():
             try:
-                await player.edit(mute = True)
+                await role.user.edit(mute = True)
             except discord.HTTPException:
                 pass
+            await channel.set_permissions(role.user, overwrite = overwrites)
     async def unMuteAll(self, party):
-        for player in party.keys():
+        
+        for role in party.values():
             try:
-                await player.edit(mute = False)
+                await role.user.edit(mute = False)
             except discord.HTTPException:
                 pass
-    async def muteDead(self, party):
-        for player, data in party.items():
-            if data.alive == False:
+        
+    async def muteDead(self, party, channel):
+        deadOverwrites = discord.PermissionOverwrite(read_messages = True, send_messages = False, add_reactions = False)
+        aliveOverwrites =  discord.PermissionOverwrite(read_messages = True, send_messages = True, add_reactions = True)
+        for role in party.values():
+            if role.alive == False:
                 try:
-                    await player.edit(mute = True)
+                    await role.user.edit(mute = True)
                 except discord.HTTPException:
                     pass  
+                await channel.set_permissions(role.user, overwrite = deadOverwrites)
             
-            elif data.alive == True:
+            elif role.alive == True:
                 try:
-                    await player.edit(mute = False)
-                 
+                    await role.user.edit(mute = False)             
                 except discord.HTTPException:
                     pass 
+                await channel.set_permissions(role.user, overwrite = aliveOverwrites)
     
     def isAlive(self, party, person):
         for player, data in party.items():
             if person == player.name.lower():
                 return data.alive
 
-    async def vote(self, party, channel, voteTime, mayor, mRevealed, minVote):
+    async def vote(self, party, channel, voteTime, mayorObj, minVote):
 
         alivePeople = []
         
@@ -79,10 +86,10 @@ class Turns():
         targets = {}
         #messages
         alreadyVoted = []
-        for player, data in party.items():
-            if data.alive == True:
-                targets[player] = {}
-                alivePeople.append(player)
+        for role in party.values():
+            if role.alive:
+                targets[role.user] = {}
+                alivePeople.append(role.user)
         for item in targets:
             targetE = discord.Embed(colour = discord.Colour.purple())
             targetE.add_field(name = item.name, value = "React to this message to vote for me!")
@@ -105,7 +112,7 @@ class Turns():
                 async for user in reaction.users():
 
                     if not user.name.lower() in alreadyVoted and user in alivePeople:
-                        if mRevealed and mayor != None and mayor.name.lower() == user.name.lower():
+                        if mayorObj and mayorObj.revealed and mayorObj.user.name.lower() == user.name.lower():
                             targets[person]["count"] += 2
                         else:
                             targets[person]["count"] += 1

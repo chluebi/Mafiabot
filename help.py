@@ -11,7 +11,7 @@ class helpC(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjUxMTc4NjkxODc4MzA5MDY4OCIsImJvdCI6dHJ1ZSwiaWF0IjoxNTQ2NjU0ODk3fQ.hADbMQxWCw0czaTDcVUpqAdCUzEpHngQUw-HtQeHVV8'  #  set this to your DBL token
-        self.dblpy = dbl.Client(self.bot, self.token)
+        self.dblpy = dbl.DBLClient(self.bot, self.token)
         self.commandsDict = {}
         self.roleList = []
         with open("classicRole.txt") as f:
@@ -38,28 +38,27 @@ class helpC(commands.Cog):
     @commands.command(pass_context = True)
     async def getVoters(self, ctx):
         temp = []
-        for item in await self.dblpy.get_upvote_info():
+        for item in await self.dblpy.get_bot_upvotes():
             temp.append(item['username'])
         await ctx.message.channel.send(temp)
 
 
     @commands.command(name = "patch", aliases = ['updates', 'update', 'patches', "changes"])
     async def patch(self, ctx):
-        update = discord.Embed(title = "Latest Mafia Updates", description = "Patch 2.0", colour = discord.Colour.blue())
+        update = discord.Embed(title = "Latest Mafia Updates", description = "Patch 1.9999", colour = discord.Colour.blue())
+
         update.add_field(name = "New feature", value = "You can now designate a category where I create the text channel! Type m.custom category `category id `!")
         update.add_field(name = "Adjusted modes", value = "Crazy mode now has less roles, but have no fear...")
         update.add_field(name = "New game mode: Chaos!", value = "Every role is in play!")
-        update.add_field(name = "Balanced roles", value = "In a party with 10 or more people, there will be a certain amount of villagers to balance out the sides.")
+        update.add_field(name = "Balanced roles", value = "In a party with 13 or more people, there will be a certain amount of villagers to balance out the sides.")
         update.add_field(name = "Adjusted command: m.gamemode", value = "Shows a list of available game modes. To change the game mode, use m.custom!")
-        update.add_field(name = "New role: Baiter", value = "Bait people to visit you so you can kill them! Kill three people to win (Doesn't affect flow of game)")
-        update.add_field(name = "Mafia role change", value = "Mafia now only do what the Godfather commands. Also the chance of framer appearing requires a minimum of 6 people.")
-        update.add_field(name = "Updated command: m.roles", value = "m.roles shows a list of all the roles. Do m.roles `role` to view specific information about a role!")
-        
-        update.add_field(name = "New DM System", value = "Now everyone responds to DM the same time. Also you select your target by reacting now. Yay time.")
-        update.add_field(name = "Mafia points update", value = "You get more points now. Yay.")
-        
-        update.set_image(url = "http://www.lol-wallpapers.com/wp-content/uploads/2018/12/Odyssey-Ziggs-Splash-Art-HD-4k-Wallpaper-Background-Official-Art-Artwork-League-of-Legends-lol.jpg")
+        update.add_field(name = "Bug fixes!(I hope)", value = "Fixed bugs with vigi and baiter. Plz tell me if there are more bugs through the support server.")
+        update.add_field(name = "Dictator has been removed.", value = "You're welcome.")
+        update.add_field(name = "Balance changes", value = "Party size requirements for roles have changed for mafia, framer, baiter and bomber.")
+        update.add_field(name = "Command change", value = "Admin can also use m.setup, m.start and m.remove without being party leader.")
+        update.set_image(url = "https://i.pinimg.com/originals/9a/6f/3d/9a6f3d0fd2eaccccb22f244e985f5468.jpg")
         await ctx.message.channel.send(embed = update)
+
     @commands.command(pass_context = True)
     async def perms(self, ctx):
         
@@ -71,6 +70,9 @@ class helpC(commands.Cog):
         except discord.Forbidden:
             embed = discord.Embed(title = "Error. Can't send a DM. Check your privacy settings.", colour = discord.Colour.red())
             await ctx.message.channel.send(embed = embed)
+
+
+
     @commands.command(pass_context = True)
     async def mini(self, ctx):
         embed = discord.Embed(title = "Current mini games:", colour = discord.Colour.blue())
@@ -78,7 +80,6 @@ class helpC(commands.Cog):
         embed.add_field(name = "Slot machine", value = "m.slot `bet`\nDefault bet is 10 points. View the list of combinations with m.combinations.")
         embed.set_image(url = "https://render.fineartamerica.com/images/rendered/default/greeting-card/images/artworkimages/medium/1/1-38885-league-of-legends-mafia-jinx-anne-pool.jpg?&targetx=-94&targety=0&imagewidth=888&imageheight=500&modelwidth=700&modelheight=500&backgroundcolor=542821&orientation=0")
         try:
-
             await ctx.channel.send(embed = embed)
         except discord.Forbidden:
             await ctx.channel.send("Can't send a DM. Check your privacy settings.")
@@ -160,7 +161,7 @@ class helpC(commands.Cog):
                 await ctx.channel.send("That's not a role I know lmao.")
 
     @commands.command(pass_context = True)
-    async def winCondition(self, ctx):
+    async def win(self, ctx):
         embed = discord.Embed(title = "Win conditions:trophy:", colour = discord.Colour.red())
         embed.add_field(name = "All threats eliminated", value = "Villager wins", inline = False)
         embed.add_field(name = "# of mafias > # of villagers", value = "Mafia wins", inline = False)
@@ -168,7 +169,6 @@ class helpC(commands.Cog):
         embed.add_field(name = "Executioner's target gets lynched", value = "Executioner wins", inline = False)
         embed.add_field(name = "Jester gets lynched", value = "Jester wins")
         embed.add_field(name = "All people dead (maybe except bomber)", value = "Bomber wins", inline = False)
-        embed.add_field(name = "Dictator's chosen side wins and dictator is alive", value = "Dictator wins", inline = False)
         await ctx.send(embed = embed)
 
     @commands.command(pass_context = True)

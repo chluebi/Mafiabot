@@ -9,6 +9,7 @@ class Slot(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     choices = [":gem:", ":heart:", ":cherries:", ":poop:"]
+    @commands.cooldown(10.0, 60.0, commands.BucketType.member)
     @commands.command(name = "slot", aliases = ["slots", "casino"])
     async def slot(self, ctx, *args):
         cog = self.bot.get_cog("mafia")
@@ -19,7 +20,7 @@ class Slot(commands.Cog):
         elif len(args) == 1:
             bet = int(args[0])
         if int(bet) < 10:
-            await ctx.channel.send("Boi that's not enough. The minimum bet is 10 Mafia points. Cheapsake.")
+            await ctx.channel.send("Boi that's not enough. The minimum bet is 10 Mafia points. Cheapsate.")
             return
         if int(bet) > playerObj.points:
             await ctx.channel.send("Boi, you don't have that much points. Nice try.")

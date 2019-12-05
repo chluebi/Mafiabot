@@ -2,19 +2,23 @@ import discord
 from discord.ext import commands
 import random
 import sys
-sys.path.insert(1, 'C:/Users/Ernest/Desktop/Mafiabot/Mafiabot-1/MAFIA')
-import gameRole as ParentR
+
+import MAFIA.gameRole as ParentR
 GameR = ParentR.GameR
 
 class Mayor(GameR):
-    def __init__(self, user):
-        GameR.__init__(self, user)
+    def __init__(self):
+        GameR.__init__(self)
         self.revealed = False
         self.alreadyShown = False
         self.side = "villager"
         self.message = None
         self.name = "mayor"
-        
+    
+    async def sendInfo(self):
+        embed = discord.Embed(title = "You're the mayor. You get two votes if you reveal your role. ", description = "Side: Villager", colour = discord.Colour.red())
+        embed.set_image(url = "https://shawglobalnews.files.wordpress.com/2017/06/adam-west-family-guy.jpg?quality=70&strip=all&w=372")
+        await self.user.send( embed = embed)
     async def sendPrompt(self, currentP, dmTime):
         if not self.revealed:
             embed = discord.Embed(title = "Hello mayor. Would you like to reveal yourself the next morning to gain two votes?", description = "React :regional_indicator_y: or :regional_indicator_n:!", colour = discord.Colour.green())
@@ -40,8 +44,12 @@ class Mayor(GameR):
             else:
                 await self.user.send("Alright, not revealing yourself yet...")
     
-    def check(self, visitor_role_obj):
+    async def check(self, visitor_role_obj):
         return
     
     async def perform(self, currentP):
-        return
+        if self.revealed:
+            mayorEmbed = discord.Embed(title = "The mayor has shown himself/herself to be {}!".format(self.user.name), description = "Now the mayor's vote counts twice!", colour = discord.Colour.green())
+            mayorEmbed.set_image(url = "https://upload.wikimedia.org/wikipedia/en/a/a3/Adam_West_on_Family_Guy.png")
+            return mayorEmbed
+        

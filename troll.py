@@ -61,5 +61,15 @@ class Troll(commands.Cog):
             return
         await ctx.channel.send(user.name + " has been added to the Blacklist. Feelsbad.")
     
+    @commands.command(pass_context = True)
+    async def smite(self, ctx, user:discord.Member):
+        if ctx.author.id != 217380909815562241:
+            await ctx.channel.send("You're not linkboi.")
+            return
+        embed = discord.Embed(title = user.name + ", say the following phrase in the next 5 seconds or you will lose all your mafia points.", description = "This is not a joke. I'll do it.", colour = discord.Colour.red())
+        embed.add_field(name = "Phrase:", value = "I have ligma. Also can someone tell me who Joe is?")
+        embed.set_thumbnail(url = user.avatar_url)
+        await ctx.channel.send(embed = embed)
+    
 def setup(bot):
     bot.add_cog(Troll(bot))

@@ -132,7 +132,7 @@ class Points(commands.Cog):
     async def giveAll(self, ctx, amount, url, *, reason):
         if ctx.author.id != 217380909815562241:
             return
-        embed = discord.Embed(title = "Congratulations! You have received " + str(amount) + " mafia points from the almighty linkboi!", description = reason, colour = discord.Colour.green())
+        embed = discord.Embed(title = "Congratulations! You have received " + str(amount) + " mafia points from the almighty linkboi!", description = "Message from linkboi: " + reason, colour = discord.Colour.green())
         embed.set_image(url = url)
         cog = self.bot.get_cog("mafia")
         for user in cog.userList:
