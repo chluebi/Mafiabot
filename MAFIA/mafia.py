@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import asyncio
 import os
+from os.path import dirname
 import json
 import random
 import logging
@@ -10,41 +11,45 @@ import MAFIA.story as story
 import MAFIA.prep as prep
 import MAFIA.gvar as gvar
 import MAFIA.turns as turn
-import user as userObj
+import USER.user as userObj
 import MAFIA.gameRole as roles
 from MAFIA.roles import *
 class mafia(commands.Cog):
-
-
     def __init__(self, bot):
         self.bot = bot
         self.userList = []
-        for filename in os.listdir("/root/mafiatemp/users"):
+        tempDir = dirname(__file__)[:-6]
+        self.userDir = tempDir + "\\users"
+        self.premiumBois = self.openJson(tempDir + "\\USER\\premium.json")
+        print(self.userDir)
+        for filename in os.listdir(self.userDir):
             self.userList.append(self.makeUser(filename))
 
 
     def makeUser(self, dir):
         tempList = []
-        with open("/root/mafiatemp/users/" + dir) as f:
+        with open(self.userDir + "\\" + dir) as f:
             count = 0
-            for line in f:
-                
+            for line in f:                
                 if count != 4 or count != 5:
-                    tempList.append(line[:-1])
-
-                
+                    tempList.append(line[:-1])           
                 else:
                     tempList.append(line)
                 count+=1
             
             tempList[4] = list(tempList[4].split())
 
-
-            
-        return userObj.MafiaUser(int(tempList[0]), int(tempList[1]), int(tempList[2]), int(tempList[3]), tempList[4], tempList[5])
+        tempPremium = None
+        customRoles = []
+        for premium, userID in self.premiumBois.items():
+            if userID == int(tempList[0]):
+                tempPremium = premium
+                customRoles = self.premiumBois[userID]
+                break
+        return userObj.MafiaUser(int(tempList[0]), int(tempList[1]), int(tempList[2]), int(tempList[3]), tempList[4], tempList[5], tempPremium, customRoles)
     
     
-    maxPlayers = 15    
+    maxPlayers = 20    
     patch = "1.9999"
     serverStatus = {}
     mafiaPlayers = {}
@@ -173,7 +178,10 @@ class mafia(commands.Cog):
                 await channel.send(embed = self.makeEmbed("Reset complete. All conditions are cleared."))
                 print ("Reset on {}".format(server.name))
                 supportChannel = self.bot.get_channel(604716684955353098)
-                await supportChannel.send("Reset on {}".format(server.name))
+                try:
+                    await supportChannel.send("Reset on {}".format(server.name))
+                except:
+                    pass
 
             else:
                 await channel.send(embed = self.makeEmbed("Ok. No reset."))
@@ -194,7 +202,10 @@ class mafia(commands.Cog):
               await channel.send(embed = self.makeEmbed("Can't clear party right now. There is a game going on!"))
           else:
               supportChannel = self.bot.get_channel(550923896858214446)
-              await supportChannel.send("Party cleared on {}".format(server.name))
+              try:
+                await supportChannel.send("Party cleared on {}".format(server.name))
+              except:
+                  pass
               self.mafiaPlayers[server.id] = {}
               await channel.send(embed = self.makeEmbed("The current party is now cleared."))
 
@@ -246,7 +257,10 @@ class mafia(commands.Cog):
                     embed = discord.Embed(title = "{} joined on {}".format(ctx.message.author.name, server.name), description = "Server size: {}".format(len(server.members)), colour = discord.Colour.dark_blue())
                     embed.set_thumbnail(url = server.icon_url)
                     supportChannel = self.bot.get_channel(550923896858214446)
-                    await supportChannel.send(embed = embed)
+                    try:
+                        await supportChannel.send(embed = embed)
+                    except:
+                        pass
                     self.mafiaPlayers[server.id][ctx.message.author] = "" # add author to dictionary
                    
                     embed = discord.Embed(title = "{} has joined the party.".format(ctx.message.author.name), description = "IMPORTANT: Make sure everything is set up correctly. To view all required permissions use m.perms. (Current patch: {})".format(self.patch), colour = discord.Colour.purple())
@@ -276,7 +290,10 @@ class mafia(commands.Cog):
                     embed = discord.Embed(title = "{} left on {}".format(ctx.message.author.name, server.name), description = "{}".format(len(server.members)), colour = discord.Colour.dark_magenta())
                     embed.set_thumbnail(url = server.icon_url)
                     supportChannel = self.bot.get_channel(550923896858214446)
-                    await supportChannel.send(embed = embed)
+                    try:
+                        await supportChannel.send(embed = embed)
+                    except:
+                        pass
                     print("{} left group on {}".format(ctx.message.author.name, server.name))
                     self.mafiaPlayers[server.id].pop(ctx.message.author, None)
                     await channel.send(embed = self.makeEmbed("{} left the party.".format(ctx.message.author.name)))
@@ -499,7 +516,10 @@ class mafia(commands.Cog):
                     embed.add_field(name = "Server id: ", value = "{}".format(server.id), inline = False)
                     embed.add_field(name = "Mode: ", value = self.getMode(server.id))
                     embed.set_thumbnail(url = server.icon_url)
-                    await supportChannel.send(embed = embed)
+                    try:
+                        await supportChannel.send(embed = embed)
+                    except:
+                        pass
                     embed = self.makeEmbed("Everyone please navigate to the mafia text channel!")
                     embed.set_image(url = "https://cdn.aarp.net/content/dam/aarp/money/budgeting_savings/2016/06/1140-navigating-medicare-mistakes.imgcache.revdd9dcfe7710d97681da985118546c1a9.jpg")
                     await channel.send(embed = embed)
@@ -562,7 +582,10 @@ class mafia(commands.Cog):
                         if self.serverStatus[server.id]['commandStop']:
                             await channel.send(embed = self.makeEmbed("Due to a request, I will end this game now."))
                             print("Requested stop on {}".format(server.name))
-                            await supportChannel.send(embed = discord.Embed(title = "A game has stopped on {}".format(server.name), description = "{}".format(server.id), colour = discord.Colour.dark_magenta()))
+                            try:
+                                await supportChannel.send(embed = discord.Embed(title = "A game has stopped on {}".format(server.name), description = "{}".format(server.id), colour = discord.Colour.dark_magenta()))
+                            except:
+                                pass
                             await asyncio.sleep(5)
                             await channel.delete()
                             break
@@ -894,7 +917,10 @@ class mafia(commands.Cog):
                     embed = discord.Embed(title = "A game has finished on {}.".format(server.name), description = "Group size: {}".format(len(currentP.keys())), colour = discord.Colour.dark_purple())
                     embed.add_field(name = "Server id: ", value = "{}".format(server.id))
                     embed.set_thumbnail(url = server.icon_url)
-                    await supportChannel.send(embed = embed)
+                    try:
+                        await supportChannel.send(embed = embed)
+                    except:
+                        pass
                     for role in currentP.values():
                         role = None
 
@@ -914,8 +940,11 @@ class mafia(commands.Cog):
                     embed = discord.Embed(title = "An error has occured on {}.".format(server.name), description = "Server id: {}".format(server.id), colour = discord.Colour.red())
                     embed.add_field(name = "Error:", value = "{}".format(traceback.format_exc()))
                     
-
-                    await supportChannel.send( embed = embed)
+                    try:
+                        await supportChannel.send( embed = embed)
+                    except:
+                        pass
+                        
                     self.serverStatus[server.id]["ready"] = False
                     self.serverStatus[server.id]["gameOn"] = False
                     self.serverStatus[server.id]["commandStop"] = False
@@ -1150,7 +1179,7 @@ class mafia(commands.Cog):
     
 
     def editFile(self, userObj):
-        path = "/root/mafiatemp/users/"
+        path = self.userDir + "\\"
         completeName = os.path.join(path, str(userObj.id)+".txt")
         n = open(completeName, "w")
         data_str = str(userObj.id) + "\n" + str(userObj.wins) + "\n" + str(userObj.games) + "\n" + str(userObj.points) + "\n" 

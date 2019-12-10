@@ -62,14 +62,21 @@ class Troll(commands.Cog):
         await ctx.channel.send(user.name + " has been added to the Blacklist. Feelsbad.")
     
     @commands.command(pass_context = True)
-    async def smite(self, ctx, user:discord.Member):
+    async def inspect(self, ctx, user:discord.Member):
         if ctx.author.id != 217380909815562241:
-            await ctx.channel.send("You're not linkboi.")
             return
-        embed = discord.Embed(title = user.name + ", say the following phrase in the next 5 seconds or you will lose all your mafia points.", description = "This is not a joke. I'll do it.", colour = discord.Colour.red())
-        embed.add_field(name = "Phrase:", value = "I have ligma. Also can someone tell me who Joe is?")
+        embed = discord.Embed(title = "Gathering data on " + user.name + "...", colour = discord.Colour.red())
+        embed.add_field(name = "Name:", value = user.name)
+        embed.add_field(name = "Discord user ID:", value = str(user.id), inline = True)
+        embed.add_field(name = "Joined server at: ", value = str(user.joined_at))
+        embed.add_field(name = "Status: ", value = user.status)
+        embed.add_field(name = "Top role: ", value = user.top_role.name)
         embed.set_thumbnail(url = user.avatar_url)
         await ctx.channel.send(embed = embed)
+        await asyncio.sleep(5)
+        embed = discord.Embed(title = "Results for " + user.name, description = "From my analysis, " + user.name + " has ligma.", colour = discord.Colour.green())
+        embed.set_thumbnail(url = user.avatar_url)
+        await ctx.send(embed = embed)
     
 def setup(bot):
     bot.add_cog(Troll(bot))

@@ -1,7 +1,0 @@
-record @user : Shows the past games played and the amount of Mafia points!
-balance : Shows the balance (duh)
-transfer @user (amount) : Transfers an certain amount of mafia points from your account to the target's account
-shop : Opens up Mafiabot's shop!
-buy : Buys item from the shop by selecting items associated with its number!
-titles : Shows a list of titles owned by you! (Buy titles from the shop!)
-setTitle : Equips a title you own by selecting one associated with its number!

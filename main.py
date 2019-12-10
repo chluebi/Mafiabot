@@ -7,34 +7,34 @@ import random
 import logging
 import traceback
 import MAFIA.dbl as dblthing
-bot = commands.AutoShardedBot(command_prefix='m.', shard_count = 3, activity = discord.Game(name="m.help", type=1))
+bot = commands.AutoShardedBot(command_prefix='r.', shard_count = 1, activity = discord.Game(name="m.help", type=1))
 bot.remove_command('help')
 
-extensions = ['mafia', 'Points', 'duel', 'slot', 'help', 'troll']
+extensions = ['mafia', 'Points', 'premium', 'duel', 'slot', 'help', 'troll']
 players = {}
 boi = "boi"
 @bot.event
 async def on_ready():
-    dblthing.DiscordBotsOrgAPI(bot)
+    #dblthing.DiscordBotsOrgAPI(bot)
     servers = len(list(bot.guilds))
     print ("Currently on {} servers!".format(servers))
     
     print("Mafiabot is online!")
     error = logging.getLogger('discord')
     error.setLevel(logging.ERROR)
-    handler = logging.FileHandler(filename='discord.log', encoding='utf-8', mode='w')
+    handler = logging.FileHandler(filename='logs/discord.log', encoding='utf-8', mode='w')
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     error.addHandler(handler)
 
     logger = logging.getLogger('discord')
     logger.setLevel(logging.DEBUG)
-    handler = logging.FileHandler(filename='debug.log', encoding='utf-8', mode='w')
+    handler = logging.FileHandler(filename='logs/debug.log', encoding='utf-8', mode='w')
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     logger.addHandler(handler)
 
     info = logging.getLogger("discord")
     info.setLevel(logging.INFO)
-    handler = logging.FileHandler(filename='info.log', encoding='utf-8', mode='w')
+    handler = logging.FileHandler(filename='logs/info.log', encoding='utf-8', mode='w')
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     info.addHandler(handler)
 
@@ -45,11 +45,14 @@ async def on_message(message):
 
 @bot.event
 async def on_guild_join(server):
-
     supportChannel = bot.get_channel(550923896858214446)
     embed = discord.Embed(title = "Joined server {}".format(server.name), description = "{} members".format(len(server.members)), colour = discord.Colour.green())
     embed.set_thumbnail(url = server.icon_url)
-    await supportChannel.send(embed = embed)
+    await self.dblpy.post_guild_count()
+    try:
+        await supportChannel.send(embed = embed)
+    except:
+        pass
 
 @bot.event
 async def on_command_error(ctx, error):
@@ -67,30 +70,34 @@ async def on_command_error(ctx, error):
         await ctx.channel.send("Call me stupid but I don't understand that input.")
     else:
         print(error)
- 
-
-
 
 @bot.event
 async def on_guild_remove(server):
     supportChannel = bot.get_channel(550923896858214446)
     embed = discord.Embed(title = "Left server {}".format(server.name), description = "{} members".format(len(server.members)), colour = discord.Colour.red())
     embed.set_thumbnail(url = server.icon_url)
-    await supportChannel.send(embed = embed)
+    try:
+        await supportChannel.send(embed = embed)
+    except:
+        pass
     print ("Left server ({}: {} members) ".format(server.name, len(server.members)))
 
     
 if __name__ == '__main__':
     for extension in extensions:
-        try:
-            if(extension == "mafia"):
-                bot.load_extension(f"MAFIA.{extension}")
-            else:
-                bot.load_extension(extension)
-        except Exception as error:
-            print('{} cannot be loaded because {}'.format(extension, error))
+        #try:
+        if(extension == "mafia"):
+            bot.load_extension(f"MAFIA.{extension}")
+        elif extension == "duel" or extension == "slot":
+            bot.load_extension(f"MINIGAMES.{extension}")
+        elif extension == "premium":
+            bot.load_extension(f"USER.{extension}")
+        else:
+            bot.load_extension(extension)
+        #except Exception as error:
+            #print('{} cannot be loaded because {}'.format(extension, error))
     with open('key.json', 'r') as f:
         keys = json.load(f)
     thing = keys['key']
     testThing = keys['test']
-    bot.run(thing)
+    bot.run(testThing)
