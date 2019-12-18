@@ -4,6 +4,7 @@ import asyncio
 import os
 import json
 import logging
+import re
 class Points(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
@@ -13,13 +14,17 @@ class Points(commands.Cog):
                 (key, val) = line.split(":")
                 self.titleList[key] = int(val)
 
-    @commands.command(pass_context = True)
-    async def record(self, ctx, user: discord.Member):
-        channel = ctx.channel
-        if user == None:
-            person = ctx.message.author
+    @commands.command(name = "record", aliases = ["p", "profile", "pf", "account"])
+    async def record(self, ctx, *args):
+        if len(args) == 0:
+            user = ctx.message.author
         else:
-            person = user
+            
+            user = ctx.guild.get_member_named(str(args[0]))
+            if not user:
+                user = ctx.guild.get_member(int(re.search(r'\d+', args[0]).group()))
+        channel = ctx.channel
+
         
         cog = self.bot.get_cog("mafia")
         cog.checkFile(user.id)
@@ -28,13 +33,20 @@ class Points(commands.Cog):
         games = str(playerObj.games)
         playerPoints = playerObj.points
         tempTitle = self.getCTitle(user.id)
-        if tempTitle != "":
+        if len(tempTitle) > 1:
             tempTitle = 'The "' + tempTitle + '"'
-        embed = discord.Embed(title = "{}'s info".format(person.name), description = tempTitle, colour = discord.Colour.gold())
-        embed.add_field(name = "Total wins", value = "{}".format(wins), inline = True)
-        embed.add_field(name = "Total games played", value = "{}".format(games))
+        if games:
+            winrate = float(int(wins)/int(games)) * 100
+        embed = discord.Embed(title = "{}'s info".format(user.name), description = tempTitle, colour = discord.Colour.gold())
+        embed.add_field(name = "Wins", value = wins, inline = True)
+        embed.add_field(name = "Games played", value = games, inline = True)
+        embed.add_field(name = "Winrate", value = "%.2f" % winrate + "%")
         embed.add_field(name = "Mafia points", value = "{}".format(str(playerPoints)))
-        embed.set_thumbnail(url = person.avatar_url)
+        if playerObj.premium:
+            embed.add_field(name = "Premium:", value = "Yes")
+        else:
+            embed.add_field(name = "Premium:", value = "No")
+        embed.set_thumbnail(url = user.avatar_url)
 
         await channel.send(embed = embed)
     

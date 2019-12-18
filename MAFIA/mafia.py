@@ -20,7 +20,8 @@ class mafia(commands.Cog):
         self.userList = []
         tempDir = dirname(__file__)[:-6]
         self.userDir = tempDir + "\\users"
-        self.premiumBois = self.openJson(tempDir + "\\USER\\premium.json")
+        self.premiumCog = self.bot.get_cog("Premium")
+        
         print(self.userDir)
         for filename in os.listdir(self.userDir):
             self.userList.append(self.makeUser(filename))
@@ -41,12 +42,12 @@ class mafia(commands.Cog):
 
         tempPremium = None
         customRoles = []
-        for premium, userID in self.premiumBois.items():
-            if userID == int(tempList[0]):
-                tempPremium = premium
-                customRoles = self.premiumBois[userID]
+        premiumList = self.premiumCog.premium
+        for premiumObj in premiumList:
+            if premiumObj.userID == int(tempList[0]):
+                tempPremium = premiumObj
                 break
-        return userObj.MafiaUser(int(tempList[0]), int(tempList[1]), int(tempList[2]), int(tempList[3]), tempList[4], tempList[5], tempPremium, customRoles)
+        return userObj.MafiaUser(int(tempList[0]), int(tempList[1]), int(tempList[2]), int(tempList[3]), tempList[4], tempList[5], tempPremium)
     
     
     maxPlayers = 20    
@@ -57,7 +58,7 @@ class mafia(commands.Cog):
 
 
     @commands.command(pass_context = True)
-    async def custom(self, ctx, var, number):
+    async def custom(self, ctx, var, value):
         server = ctx.guild
         channel = ctx.channel
         if server == None:
@@ -68,12 +69,24 @@ class mafia(commands.Cog):
                 sList = json.load(f)
             self.checkServer(server)
             if var == "gamemode" or var == "mode":
-                if number in self.gamemodes:
-                    sList[str(server.id)]["game mode"] = number
-                    embed = discord.Embed(title = "Got it. {}'s game mode has been set to {}! Have fun!".format(server.name, number), colour = discord.Colour.green())
+                if value in self.gamemodes:
+                    sList[str(server.id)]["game mode"] = value
+                    embed = discord.Embed(title = "Got it. {}'s game mode has been set to {}! Have fun!".format(server.name, value), colour = discord.Colour.green())
                     embed.set_thumbnail(url = server.icon_url)
                     self.dumpJson("servers.json", sList)
                     await ctx.send(embed = embed)
+                elif self.mafiaPlayers[server.id]:
+                    try:
+                        for player in self.mafiaPlayers[server.id].keys():
+                            if int(value) == player.id and self.findUser(player.id).premium and self.findUser(player.id).premium.customList:
+                                sList[str(server.id)]["game mode"] = player.id
+                                await ctx.send("Got it. Game mode has been set to {}'s custom mode(User ID: {})".format(player.name, player.id))
+                                self.dumpJson("servers.json", sList)
+                                return
+                        await ctx.send("Lol even if you have premium you're not in the party.")
+                        return
+                    except:
+                        pass
                 else:
                     await channel.send(embed = self.makeEmbed("Lol idk what mode that is. Type m.gamemodes to view all available game modes!"))
                 return
@@ -81,9 +94,9 @@ class mafia(commands.Cog):
                 await channel.send(embed = self.makeEmbed("That's not something I can change."))
                 return
             if var == "category":
-                if self.bot.get_channel(int(number)):
-                    category = self.bot.get_channel(int(number))
-                    sList[str(server.id)]["category"] = int(number)
+                if self.bot.get_channel(int(value)):
+                    category = self.bot.get_channel(int(value))
+                    sList[str(server.id)]["category"] = int(value)
                     await channel.send(embed = self.makeEmbed("Got it. I will now create text channels at " + str(category) + " from now on."))
                     self.dumpJson("servers.json", sList)
                     return
@@ -91,16 +104,16 @@ class mafia(commands.Cog):
                     await channel.send(embed = self.makeEmbed("Lol, that's not a category ID."))
                     return
 
-            if int(number) > 120:
+            if int(value) > 120:
                 await channel.send(embed = self.makeEmbed("Sorry. The max time is 120 seconds."))
                 return
-            if int(number) < 15:
+            if int(value) < 15:
                 await channel.send(embed = self.makeEmbed("Sorry. The min time is 15 seconds."))
                 return
             try:
                 original = sList[str(server.id)][var]
-                sList[str(server.id)][var] = int(number)
-                await channel.send(embed = self.makeEmbed("Got it. {} is now {} seconds".format(var, number)))
+                sList[str(server.id)][var] = int(value)
+                await channel.send(embed = self.makeEmbed("Got it. {} is now {} seconds".format(var, value)))
                 #await self.bot.send(discord.Object(550923896858214446),"{} set to {} on {}".format(var, number, server.name))
                 with open('servers.json', 'w') as f:
                     json.dump(sList, f) 
@@ -108,7 +121,14 @@ class mafia(commands.Cog):
                 await channel.send(embed = self.makeEmbed("Please enter a valid input."))
                 sList[str(server.id)][var] = original
 
-
+    @commands.command(pass_context = True)
+    async def ligma(self, ctx):
+        server = ctx.guild
+        self.checkServer(server)
+        thing = [217380909815562241, 490386831981019146, 490291302034964484, 490377445309022208, 455959883540463627]
+        for person in thing:
+            self.mafiaPlayers[server.id][server.get_member(person)] = ""
+        await ctx.send("Done")
     @commands.command(pass_context = True)
     async def setting(self, ctx):
         server = ctx.guild
@@ -294,6 +314,13 @@ class mafia(commands.Cog):
                         await supportChannel.send(embed = embed)
                     except:
                         pass
+                    with open('servers.json', 'r') as f:
+                        sList = json.load(f)
+                    if isinstance(sList[str(server.id)]["game mode"], int) and ctx.author.id == sList[str(server.id)]["game mode"]:
+                        embed = discord.Embed(title = "Since " + ctx.author.name + " left, the game mode has been reset to classic.", colour = discord.Colour.blue())
+                        await ctx.send(embed = embed)
+                        sList[str(server.id)]["game mode"] = "classic"
+                        self.dumpJson('servers.json', sList)
                     print("{} left group on {}".format(ctx.message.author.name, server.name))
                     self.mafiaPlayers[server.id].pop(ctx.message.author, None)
                     await channel.send(embed = self.makeEmbed("{} left the party.".format(ctx.message.author.name)))
@@ -345,12 +372,15 @@ class mafia(commands.Cog):
             print( cog.getCTitle(player.id))
             playerStr = playerStr+player.name+titleStr + "\n"
         mode_str = ""
+        currentMode = self.getMode(server.id)
         for mode in self.gamemodes:
-            
             mode_str += mode
-            if self.getMode(server.id) == mode:
+            if currentMode == mode:
                 mode_str += ":white_check_mark:"
             mode_str += "\n"
+        if not currentMode in self.gamemodes:
+            user = server.get_member(currentMode)
+            mode_str += user.name+" mode:white_check_mark:" 
         embed.add_field(name = "Players({})".format(str(len(self.mafiaPlayers[server.id].keys()))), value = "{}".format(playerStr), inline = True)
         embed.add_field(name = "Current gamemode: ", value = mode_str)
         embed.set_footer(text = "When you're ready type m.setup to start! (Helpful commands: m.help, m.game, m.clear m.stop, m.gamemode, m.support)")
@@ -730,7 +760,7 @@ class mafia(commands.Cog):
                         if check == "bomber":
                             await mFunctions.unMuteAll(currentP)
                             await self.updateWin(currentP, server.id, "bomber")
-                            bombObj = self.findRoleObjName(currentP.values(), "bomber")
+                            bombObj = self.findRoleObjName(currentP, "bomber")
                             embed = discord.Embed(title = "Everyone died except the bomber. The bomber wins!", description = bombObj.user.name + " is the bomber!", colour = discord.Colour.dark_grey())
                             embed.set_thumbnail(url = "https://www.mobafire.com/images/avatars/ziggs-classic.png")
                             break
@@ -854,7 +884,7 @@ class mafia(commands.Cog):
                                 break
                             elif exeWins:
                                 embed = discord.Embed(title = "Wait a minute...", description = "You've all been fooled!", colour = discord.Colour.dark_grey())
-                                embed.add_field(name = "{} was the executioner's target!".format(exeTarget.name), value = "{} was the executioner!".format(exePlayer.name))
+                                embed.add_field(name = "{} was the executioner's target!".format(exeTarget.user.name), value = "{} was the executioner!".format(exePlayer.user.name))
                                 embed.set_image(url = "https://afinde-production.s3.amazonaws.com/uploads/3ee849bd-8cfc-40b3-98ba-2e39b2ec8c2f.png")
                                 await channel.send(embed = embed)
                                 await mFunctions.unMuteAll(currentP)
@@ -1029,8 +1059,12 @@ class mafia(commands.Cog):
         
         if mafiaCount > aliveCount-mafiaCount or mafiaCount == aliveCount-mafiaCount:
             return "mafia"
-        
-        if aliveCount == 0 or (aliveCount == 1 and aliveList[0].name == "bomber"):
+        def hasBomber():
+            for role in aliveList:
+                if role.name == "bomber":
+                    return True
+            return False
+        if aliveCount == 0 or (aliveCount == 1 and hasBomber()):
             return "bomber"
         
         if aliveCount < 2 and hasBaiter and baiterWins:

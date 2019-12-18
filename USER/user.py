@@ -2,7 +2,7 @@
 
 class MafiaUser:
     
-    def __init__(self, userID = 0, wins = 0, games = 0, points = 0, titles = [], currentTitle = " ", premium = 0, customRoles = []):
+    def __init__(self, userID = 0, wins = 0, games = 0, points = 0, titles = [], currentTitle = " ", premium = None):
         self.id = userID
         self.wins = wins
         self.games = games
@@ -10,7 +10,6 @@ class MafiaUser:
         self.titles = titles
         self.currentTitle = currentTitle
         self.premium = premium
-        self.customRoles = customRoles
         
     def addWin(self):
         self.wins+= 1

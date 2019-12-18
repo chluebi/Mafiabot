@@ -1,0 +1,13 @@
+[Unit]
+Description=Bot
+After=multi-user.target
+[Service]
+WorkingDirectory=/root/mafiatemp
+User=root
+ExecStart=/usr/bin/python3 /root/mafiatemp/main.py --no-prompt
+Type=idle
+Restart=always
+RestartSec=15
+
+[Install]
+WantedBy=multi-user.target

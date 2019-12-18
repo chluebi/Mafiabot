@@ -10,7 +10,7 @@ import MAFIA.dbl as dblthing
 bot = commands.AutoShardedBot(command_prefix='r.', shard_count = 1, activity = discord.Game(name="m.help", type=1))
 bot.remove_command('help')
 
-extensions = ['mafia', 'Points', 'premium', 'duel', 'slot', 'help', 'troll']
+extensions = ['Points', 'premium', 'duel', 'slot', 'help', 'troll', 'mafia']
 players = {}
 boi = "boi"
 @bot.event
@@ -38,6 +38,8 @@ async def on_ready():
     handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
     info.addHandler(handler)
 
+    premiumCog = bot.get_cog("Premium")
+    premiumCog.updatePremium()
 @bot.event
 async def on_message(message):
     if message.author != bot.user:
