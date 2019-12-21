@@ -245,7 +245,10 @@ class mafia(commands.Cog):
             sList = json.load(f)
         self.checkServer(server)
         currentMode = sList[str(server.id)]["game mode"]
-        embed.set_footer(text = "Current game mode: " + currentMode.upper())
+        try:
+            embed.set_footer(text = "Current game mode: " + currentMode.upper())
+        except Exception:
+            embed.set_footer(text = "Current game mode: " + str(currentMode))
         embed.set_image(url = "http://www.lol-wallpapers.com/wp-content/uploads/2018/06/Gangster-Twitch-Splash-Art-Update-HD-4k-Wallpaper-Background-Official-Art-Artwork-League-of-Legends-lol.jpg")
         await ctx.send(embed = embed)
 
