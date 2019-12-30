@@ -1,0 +1,14 @@
+
+*.pyc
+
+.vscode/
+
+*.log
+
+test.py
+
+users/
+
+USER/premium.json
+
+USER/temp.py
